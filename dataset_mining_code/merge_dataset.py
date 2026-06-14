@@ -1,3 +1,22 @@
+"""
+Dataset Merge Script
+
+Purpose:
+    Combine ApacheJIT commit metadata and bug labels with extracted
+    commit messages and code diffs using commit_id as the key.
+
+Input:
+    - apachejit_total.csv
+    - extracted_commits.csv
+
+Output:
+    - final_dataset.csv
+
+Result:
+    Produces a unified dataset containing commit labels, project
+    information, commit messages, and code diffs for downstream
+    defect prediction experiments.
+"""
 import pandas as pd
 
 print("Loading ApacheJIT dataset...")

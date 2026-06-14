@@ -1,3 +1,30 @@
+"""
+Multilanguage Dataset Inspection Script
+
+Purpose:
+    Perform a sanity check on the final multilanguage dataset by
+    displaying dataset dimensions, column names, and sample records
+    from different sections of the file.
+
+Checks performed:
+    - Dataset shape
+    - Available columns/features
+    - First 5 rows
+    - Sample rows from the middle of the dataset
+    - Last 5 rows
+
+Input:
+    - final_multilanguage.csv
+      or
+    - final_multilanguage_dataset.csv
+
+Output:
+    Console-based dataset summary for verification and debugging.
+
+Notes:
+    Intended for dataset validation before feature extraction,
+    model training, or experimental analysis.
+"""
 import pandas as pd
 from pathlib import Path
 

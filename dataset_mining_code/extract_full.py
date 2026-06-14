@@ -1,3 +1,27 @@
+"""
+Commit Extraction Script
+
+Purpose:
+    Extract commit messages and source code diffs for commits listed in
+    apachejit_total.csv using PyDriller.
+
+Input:
+    - apachejit_total.csv containing project names and commit IDs
+    - Local cloned repositories stored under repo_base
+
+Output:
+    - extracted_commits.csv containing:
+        * commit_id
+        * commit message
+        * combined code diff
+
+Notes:
+    - Supports resuming interrupted executions by skipping already
+      extracted commits present in extracted_commits.csv.
+    - Intended for dataset construction and preprocessing.
+    - Typically run once during dataset generation; not required during
+      model training or evaluation.
+"""
 import pandas as pd
 from pydriller import Repository
 import csv
