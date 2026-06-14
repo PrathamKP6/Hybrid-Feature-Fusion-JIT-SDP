@@ -1,0 +1,23 @@
+=============================================================================
+                         PCA COMPARISON REPORT
+=============================================================================
+
+Source rows scanned: 2,000
+Sample rows used: 2,000
+Component sweep: 768, 512, 384, 256
+Variance retention threshold: 99.0%
+
+Comparison metrics:
+ n_components  fit_seconds  explained_variance_ratio  train_reconstruction_mse  test_reconstruction_mse  compression_ratio status
+          768     0.610474                  1.000000              1.322119e-15             1.257169e-15                1.0     ok
+          512     0.756915                  0.999103              4.328132e-06             1.215144e-05                1.5     ok
+          384     0.599656                  0.996769              1.558224e-05             3.267004e-05                2.0     ok
+          256     0.729360                  0.988407              5.591251e-05             9.156192e-05                3.0     ok
+
+Interpretation:
+  - Lower reconstruction MSE is better.
+  - Higher explained variance is better.
+  - Lower fit time is better.
+
+Recommendation: Smallest model meeting 99.0% variance retention: 384 components (99.68% explained variance).
+=============================================================================

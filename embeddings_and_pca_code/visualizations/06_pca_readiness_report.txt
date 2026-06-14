@@ -1,0 +1,65 @@
+=============================================================================
+                      PCA READINESS DIAGNOSTICS
+=============================================================================
+
+Input Shape: (30000, 768)
+Dimensions: 768
+Rows Used for Correlation: 5,000
+
+Per-Dimension Variance:
+  - Mean variance: 0.005383
+  - Std of variance: 0.006758
+  - Min variance: 0.001702
+  - Max variance: 0.180758
+  - Variance ratio max/min: 106.205498
+  - Effective rank from variance distribution: 630.97
+
+Variance Concentration:
+  - Top 1 dimension explains: 4.37%
+  - Top 5 dimensions explain: 6.27%
+  - Top 10 dimensions explain: 7.94%
+  - Top 25 dimensions explain: 12.11%
+  - Dimensions for 50% variance: 245
+  - Dimensions for 80% variance: 509
+  - Dimensions for 90% variance: 623
+  - Dimensions for 95% variance: 688
+  - Dimensions for 99% variance: 749
+
+Correlation Structure:
+  - Mean absolute off-diagonal correlation: 0.194025
+  - Median absolute off-diagonal correlation: 0.169367
+  - 95th percentile absolute correlation: 0.457570
+  - Max absolute correlation: 0.831328
+  - Pairs with |corr| >= 0.30: 65198
+  - Pairs with |corr| >= 0.50: 8558
+  - Pairs with |corr| >= 0.70: 147
+
+Top Variance Dimensions:
+  - Rank  1: dim 588 | variance=0.180758 | share=4.372% | cumulative=4.372%
+  - Rank  2: dim  77 | variance=0.026849 | share=0.649% | cumulative=5.021%
+  - Rank  3: dim 551 | variance=0.021030 | share=0.509% | cumulative=5.530%
+  - Rank  4: dim 586 | variance=0.015734 | share=0.381% | cumulative=5.911%
+  - Rank  5: dim  26 | variance=0.014964 | share=0.362% | cumulative=6.273%
+  - Rank  6: dim 684 | variance=0.014501 | share=0.351% | cumulative=6.623%
+  - Rank  7: dim 453 | variance=0.014099 | share=0.341% | cumulative=6.964%
+  - Rank  8: dim 211 | variance=0.013802 | share=0.334% | cumulative=7.298%
+  - Rank  9: dim 259 | variance=0.013653 | share=0.330% | cumulative=7.629%
+  - Rank 10: dim 444 | variance=0.012910 | share=0.312% | cumulative=7.941%
+
+Top Correlated Dimension Pairs:
+  - Rank  1: dim 494 vs dim 507 | corr=-0.831328 | abs=0.831328
+  - Rank  2: dim 447 vs dim 494 | corr=-0.830287 | abs=0.830287
+  - Rank  3: dim  97 vs dim 749 | corr=0.826947 | abs=0.826947
+  - Rank  4: dim 130 vs dim 494 | corr=0.826298 | abs=0.826298
+  - Rank  5: dim  77 vs dim 551 | corr=-0.818995 | abs=0.818995
+  - Rank  6: dim 494 vs dim 551 | corr=-0.807752 | abs=0.807752
+  - Rank  7: dim 217 vs dim 219 | corr=0.800309 | abs=0.800309
+  - Rank  8: dim  77 vs dim 684 | corr=0.795792 | abs=0.795792
+  - Rank  9: dim 496 vs dim 551 | corr=-0.795522 | abs=0.795522
+  - Rank 10: dim 551 vs dim 588 | corr=-0.792992 | abs=0.792992
+
+Interpretation Guide:
+  - If a small number of dimensions explain most variance, PCA compression is likely effective.
+  - If off-diagonal correlations are consistently low, PCA may still help mostly by rotating into a compact basis rather than removing redundancy.
+  - If many dimensions are correlated and a few dominate variance, you can usually reduce to the 80-95% variance range and validate downstream performance.
+=============================================================================
