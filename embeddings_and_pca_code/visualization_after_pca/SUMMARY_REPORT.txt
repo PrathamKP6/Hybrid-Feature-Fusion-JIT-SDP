@@ -1,0 +1,75 @@
+
+=============================================================================
+                    EMBEDDINGS DATASET SUMMARY REPORT
+=============================================================================
+
+Dataset Shape:
+  - Total Rows: 105,121
+  - Total Columns: 22
+  - Embeddings Dimension: 384
+
+Columns:
+  - commit_id: object
+  - project: object
+  - buggy: int64
+  - fix: int64
+  - year: int64
+  - author_date: int64
+  - la: int64
+  - ld: int64
+  - nf: int64
+  - nd: int64
+  - ns: int64
+  - ent: float64
+  - ndev: float64
+  - age: float64
+  - nuc: float64
+  - aexp: int64
+  - arexp: float64
+  - asexp: float64
+  - message: object
+  - diff: object
+  - input_text: object
+  - embedding: object
+
+Embedding Statistics:
+  - Shape: (105121, 384)
+  - Min Value: -3.786031
+  - Max Value: 3.514251
+  - Mean Value: 0.000577
+  - Std Dev: 0.116671
+  - L2 Norm (mean): 2.219824
+  - Sparsity (< 0.01): 21.90%
+
+Data Quality:
+  - Missing Values: 0
+  - Duplicate Rows: 0
+  
+Text Columns Analysis:
+
+  commit_id:
+    - Mean Length: 40
+    - Max Length: 40
+    - Min Length: 40
+
+  project:
+    - Mean Length: 13
+    - Max Length: 23
+    - Min Length: 10
+
+  message:
+    - Mean Length: 163
+    - Max Length: 27460
+    - Min Length: 1
+
+  diff:
+    - Mean Length: 17086
+    - Max Length: 10003039
+    - Min Length: 82
+
+  input_text:
+    - Mean Length: 17256
+    - Max Length: 10003123
+    - Min Length: 155
+
+=============================================================================
