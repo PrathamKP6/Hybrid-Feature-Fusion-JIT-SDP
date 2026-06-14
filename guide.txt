@@ -1,0 +1,184 @@
+Project Title:
+Hybrid Feature Fusion Framework for Just-in-Time Software Defect Prediction
+
+Research Objective:
+Build a modular machine learning framework for software defect prediction using three feature sources:
+
+1. Traditional JIT defect prediction metrics
+2. CodeBERT embeddings
+3. LLM-generated reasoning features
+
+Dataset Characteristics:
+
+* More than 100,000 commits
+* Multiple programming languages (Java, Python, C++, etc.)
+* Binary classification:
+  0 = Non-buggy
+  1 = Buggy
+* Imbalanced class distribution
+* Imbalanced language distribution
+* Commit timestamps available
+
+Initial Development Dataset:
+
+* Filter commits from years 2018-2026
+* Perform stratified sampling based on:
+  Language × Bug Label
+* Create approximately 10,000 commit subset
+* Preserve temporal ordering
+
+Temporal Evaluation Strategy:
+
+* Sort commits chronologically
+* First 80% → Train
+* Last 20% → Test
+* No random splitting
+* No data shuffling
+
+Feature Sources:
+
+Traditional JIT Features:
+
+* LA
+* LD
+* NF
+* NS
+* ND
+* Entropy
+* NDEV
+* AGE
+* NUC
+* AEXP
+* AREXP
+* ASEXP
+
+CodeBERT Features:
+
+* Precomputed embeddings
+* 768-dimensional vectors
+* Reduced to 20 dimensions using PCA
+* Merged using commit_id
+
+LLM Reasoning Features:
+
+* Generated separately
+* Numerical reasoning representation
+* Merged using commit_id
+
+Experiments:
+
+Experiment 1:
+Features:
+JIT Only
+Models:
+Random Forest
+XGBoost
+
+Experiment 2:
+Features:
+CodeBERT Only
+Models:
+Random Forest
+XGBoost
+
+Experiment 3:
+Features:
+LLM Reasoning Only
+Models:
+Random Forest
+XGBoost
+
+Experiment 4:
+Features:
+JIT + CodeBERT
+Models:
+Random Forest
+XGBoost
+
+Experiment 5:
+Features:
+JIT + LLM
+Models:
+Random Forest
+XGBoost
+
+Experiment 6:
+Features:
+CodeBERT + LLM
+Models:
+Random Forest
+XGBoost
+
+Experiment 7:
+Features:
+JIT + CodeBERT + LLM
+Models:
+Random Forest
+XGBoost
+LightGBM
+
+Required Evaluation Metrics:
+
+* Accuracy
+* Precision
+* Recall
+* F1 Score
+* ROC-AUC
+* PR-AUC
+* Matthews Correlation Coefficient (MCC)
+* Confusion Matrix
+
+Required Visualizations:
+
+* ROC Curves
+* Precision Recall Curves
+* Feature Importance
+* Model Comparison Charts
+
+Implementation Requirements:
+
+Create modular Python code with:
+
+preprocessing/
+load_data.py
+clean_data.py
+sampling.py
+temporal_split.py
+feature_selection.py
+
+models/
+train_random_forest.py
+train_xgboost.py
+train_lightgbm.py
+evaluate.py
+model_factory.py
+
+fusion/
+feature_fusion.py
+
+experiments/
+Separate experiment scripts for all seven experiments
+
+utils/
+config.py
+metrics.py
+logger.py
+
+Coding Standards:
+
+* Python 3.11+
+* Type hints
+* Docstrings
+* Logging
+* Exception handling
+* Reusable modules
+* Configuration-driven design
+
+Save:
+
+* Models
+* Metrics
+* Predictions
+* Visualizations
+
+Design the framework so additional feature sources or classifiers can be added later with minimal code changes.

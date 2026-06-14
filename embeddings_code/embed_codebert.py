@@ -1,3 +1,37 @@
+"""
+CodeBERT Embedding Extraction Pipeline
+
+Purpose:
+    Generate semantic embeddings for commit messages and code diffs
+    using Microsoft's CodeBERT model for software defect prediction.
+
+Workflow:
+    1. Load the multilingual defect dataset.
+    2. Combine commit messages and code diffs into a single input text.
+    3. Tokenize inputs using CodeBERT tokenizer.
+    4. Generate CLS embeddings using the pretrained CodeBERT model.
+    5. Save embeddings alongside original dataset features.
+    6. Maintain progress checkpoints for safe resumption after interruptions.
+
+Input:
+    - final_multilanguage_dataset.csv
+
+Output:
+    - final_multilanguage_dataset_with_embeddings.csv
+
+Features:
+    - GPU acceleration (CUDA support)
+    - Automatic batch processing
+    - Resume from checkpoints after crashes/interruption
+    - Out-of-memory recovery by reducing batch size
+    - Disk space validation before execution
+    - Progress tracking for large datasets
+
+Use Case:
+    Converts textual commit information into dense vector
+    representations that can be used as input features for
+    machine learning and deep learning based defect prediction models.
+"""
 import os
 import argparse
 import json
