@@ -2,5 +2,5 @@ final_dataset.csv
 final_dataset.csv.zip
 .venv/
 __pycache__/
-final_multilanguage_dataset.csv
-final_multilanguage_dataset_with_embeddings.csv
+embeddings_and_pca_code/*.csv
+*.log
