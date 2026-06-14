@@ -1,6 +1,26 @@
 """
-Visualization script for embeddings dataset.
-Provides multiple visualizations including t-SNE projections, statistics, and embeddings analysis.
+Embeddings Visualization and Analysis Script
+
+Purpose:
+    Analyze and visualize CodeBERT embeddings generated from commit
+    messages and code diffs. Produces statistical summaries, dimensionality
+    reduction plots, dataset quality checks, and embedding diagnostics.
+
+Input:
+    - final_multilanguage_dataset_with_embeddings.csv
+
+Outputs:
+    - Dataset overview plots
+    - Embedding statistics visualizations
+    - PCA projections
+    - t-SNE projections
+    - UMAP projections
+    - Text length distributions
+    - Summary report
+
+Use Case:
+    Validate embedding quality and explore the structure of the
+    feature space before training defect prediction models.
 """
 
 import os
