@@ -6,3 +6,5 @@ embeddings_and_pca_code/*.csv
 *.log
 final_multilanguage_dataset.csv
 final_multilanguage_dataset_with_embeddings_pca384.csv
+frozen_sample_commit_ids.csv
+frozen_sample_dataset.csv
