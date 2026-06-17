@@ -54,16 +54,86 @@ Traditional JIT Features:
 
 CodeBERT Features:
 
-* Precomputed embeddings
-* 768-dimensional vectors
-* Reduced to 20 dimensions using PCA
-* Merged using commit_id
+* Precomputed CodeBERT embeddings
+* Original dimension: 768
+* PCA already applied offline
+* Final embedding dimension: 384
+* Embeddings merged using commit_id
+* No PCA required during experiments
 
 LLM Reasoning Features:
 
-* Generated separately
-* Numerical reasoning representation
-* Merged using commit_id
+Reasoning features are generated separately using an LLM.
+
+For each commit, the LLM produces structured reasoning attributes:
+
+1. Intent
+   - bug_fix
+   - feature_addition
+   - feature_modification
+   - refactoring
+   - performance_improvement
+   - documentation
+   - configuration_change
+   - test_update
+   - dependency_update
+
+2. Change Type
+   - control_flow
+   - data_manipulation
+   - api_change
+   - exception_handling
+   - ui_change
+   - database_change
+   - configuration_change
+   - test_change
+   - security_change
+
+3. Risk Level
+   - low
+   - medium
+   - high
+   - critical
+
+4. Complexity
+   - low
+   - medium
+   - high
+
+5. Scope
+   - single_line
+   - single_file
+   - multiple_files
+   - cross_module
+
+6. Test Impact
+   - yes
+   - no
+
+7. Security Risk
+   - yes
+   - no
+
+8. Confidence Score
+   - numeric value between 0 and 1
+
+Categorical features should be encoded using one-hot encoding where appropriate.
+
+Reasoning features are stored separately and merged using commit_id.
+
+Required Files:
+
+llm_reasoning_raw.csv
+
+Columns:
+- commit_id
+- reasoning_text
+
+reasoning_features.csv
+
+Columns:
+- commit_id
+- encoded reasoning features
 
 Experiments:
 
@@ -182,3 +252,18 @@ Save:
 * Visualizations
 
 Design the framework so additional feature sources or classifiers can be added later with minimal code changes.
+
+Important:
+
+CodeBERT embeddings are already generated and PCA-reduced.
+
+Do not generate code for:
+- CodeBERT embedding extraction
+- Transformer inference
+- PCA fitting
+
+Experiments should directly load precomputed PCA-reduced embeddings.
+
+LLM reasoning features are generated externally and merged using commit_id.
+
+Experiments should treat reasoning features as structured numerical features.
