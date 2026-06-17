@@ -1,0 +1,35 @@
+{
+  "initial_rows": 105121,
+  "duplicates_removed": 0,
+  "rows_removed_missing_target": 0,
+  "missing_before": {
+    "la": 0,
+    "ld": 0,
+    "nf": 0,
+    "ns": 0,
+    "nd": 0,
+    "ent": 0,
+    "ndev": 0,
+    "age": 0,
+    "nuc": 0,
+    "aexp": 0,
+    "arexp": 0,
+    "asexp": 0
+  },
+  "missing_after": {
+    "la": 0,
+    "ld": 0,
+    "nf": 0,
+    "ns": 0,
+    "nd": 0,
+    "ent": 0,
+    "ndev": 0,
+    "age": 0,
+    "nuc": 0,
+    "aexp": 0,
+    "arexp": 0,
+    "asexp": 0
+  },
+  "imputed_values": {},
+  "final_rows": 105121
+}
