@@ -33,11 +33,11 @@ logger = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset.csv"
-RESULTS_DIR = PROJECT_ROOT / "results"
-METRICS_DIR = RESULTS_DIR / "metrics"
-PREDICTIONS_DIR = RESULTS_DIR / "predictions"
-PLOTS_DIR = RESULTS_DIR / "plots"
-MODELS_DIR = PROJECT_ROOT / "models" / "saved"
+EXPERIMENT_DIR = PROJECT_ROOT / "results" / "experiment_1"
+METRICS_DIR = EXPERIMENT_DIR / "metrics"
+PREDICTIONS_DIR = EXPERIMENT_DIR / "predictions"
+PLOTS_DIR = EXPERIMENT_DIR / "plots"
+MODELS_DIR = EXPERIMENT_DIR / "models"
 
 JIT_FEATURES: List[str] = [
     "la",
@@ -61,9 +61,23 @@ def ensure_directories() -> None:
 
 
 def save_json(data: Dict[str, object], path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
     logger.info("Saved JSON to %s", path)
+
+
+def save_feature_importance_csv(model: object, feature_names: List[str], path: Path) -> None:
+    if not hasattr(model, "feature_importances_"):
+        logger.warning("Model %s does not have feature_importances_", model.__class__.__name__)
+        return
+
+    importance_df = pd.DataFrame(
+        {"feature": feature_names, "importance": model.feature_importances_}
+    ).sort_values(by="importance", ascending=False)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    importance_df.to_csv(path, index=False)
+    logger.info("Saved feature importance CSV to %s", path)
 
 
 def plot_roc_pr(
@@ -182,18 +196,60 @@ def main() -> None:
     logger.info("Evaluating XGBoost model")
     xgb_metrics = compute_classification_metrics(y_test, xgb_pred, xgb_score)
 
-    metrics_path = METRICS_DIR / "experiment_1_jit_only_metrics.json"
-    save_json({"random_forest": rf_metrics, "xgboost": xgb_metrics}, metrics_path)
+    metrics_path = METRICS_DIR / "random_forest_metrics.json"
+    save_json(rf_metrics, metrics_path)
+    metrics_path = METRICS_DIR / "xgboost_metrics.json"
+    save_json(xgb_metrics, metrics_path)
 
-    predictions_df = X_test.copy()
-    predictions_df["buggy_true"] = y_test.values
-    predictions_df["rf_pred"] = rf_pred.values
-    predictions_df["rf_score"] = rf_score.values
-    predictions_df["xgb_pred"] = xgb_pred.values
-    predictions_df["xgb_score"] = xgb_score.values
+    split_report = {
+        "n_rows": len(df_sampled),
+        "train_rows": len(X_train),
+        "test_rows": len(X_test),
+        "train_ratio": 0.8,
+        "test_ratio": 0.2,
+        "train_buggy_distribution": y_train.value_counts().sort_index().to_dict(),
+        "test_buggy_distribution": y_test.value_counts().sort_index().to_dict(),
+    }
+    save_json(split_report, METRICS_DIR / "split_report.json")
+
+    save_json(clean_report, METRICS_DIR / "cleaning_report.json")
+
+    combined_summary = {
+        "experiment": "experiment_1_jit_only",
+        "dataset_rows": len(df_sampled),
+        "train_rows": len(X_train),
+        "test_rows": len(X_test),
+        "features": JIT_FEATURES,
+        "scale_pos_weight": scale_pos_weight,
+        "models": {
+            "random_forest": rf_metrics,
+            "xgboost": xgb_metrics,
+        },
+    }
+    save_json(combined_summary, METRICS_DIR / "summary.json")
+
+    predictions_meta = df_sampled.loc[X_test.index, ["commit_id", "project", "author_date"]].copy()
+    predictions_df = predictions_meta.assign(
+        buggy_true=y_test.values,
+        rf_pred=rf_pred.values,
+        rf_score=rf_score.values,
+        xgb_pred=xgb_pred.values,
+        xgb_score=xgb_score.values,
+    )
     predictions_path = PREDICTIONS_DIR / "experiment_1_jit_only_predictions.csv"
     predictions_df.to_csv(predictions_path, index=False)
     logger.info("Saved predictions to %s", predictions_path)
+
+    save_feature_importance_csv(
+        rf_model,
+        JIT_FEATURES,
+        METRICS_DIR / "experiment_1_rf_feature_importance.csv",
+    )
+    save_feature_importance_csv(
+        xgb_model,
+        JIT_FEATURES,
+        METRICS_DIR / "experiment_1_xgb_feature_importance.csv",
+    )
 
     plot_roc_pr(
         y_test,

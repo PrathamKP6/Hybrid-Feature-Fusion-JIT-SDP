@@ -8,3 +8,5 @@ final_multilanguage_dataset.csv
 final_multilanguage_dataset_with_embeddings_pca384.csv
 frozen_sample_commit_ids.csv
 frozen_sample_dataset.csv
+results/experiment_1/models/*
+results/experiment_2/models/*
