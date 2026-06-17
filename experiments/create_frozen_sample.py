@@ -22,7 +22,7 @@ from preprocessing.sampling import filter_commits_by_date, stratified_sample
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset.csv"
+DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset_with_embeddings_pca384.csv"
 RESULTS_DIR = PROJECT_ROOT / "results"
 FROZEN_SAMPLE_PATH = RESULTS_DIR / "frozen_sample_dataset.csv"
 FROZEN_COMMIT_IDS_PATH = RESULTS_DIR / "frozen_sample_commit_ids.csv"
