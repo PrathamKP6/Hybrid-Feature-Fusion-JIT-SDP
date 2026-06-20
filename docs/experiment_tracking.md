@@ -78,4 +78,43 @@ Evaluate semantic code representations.
 
 ## Results
 
-TBD
+| Model | Accuracy | F1     | ROC-AUC | MCC    |
+| ----- | -------- | ------ | ------- | ------ |
+| RF    | 0.698    | 0.0591 | 0.7157  | 0.0514 |
+| XGB   | 0.7095   | 0.1315 | 0.7420  | 0.1418 |
+
+## Observations:
+
+## Observations
+
+- XGBoost outperformed Random Forest across all evaluation metrics, indicating that boosting methods are more effective in utilizing semantic CodeBERT representations for defect prediction.
+
+- Despite achieving moderate ROC-AUC values (0.7157 for RF and 0.7420 for XGB), both models produced very low F1-scores and MCC values, suggesting difficulty in correctly identifying bug-inducing commits.
+
+- Compared to Experiment 1 (JIT Metrics Only), CodeBERT features alone resulted in substantially lower predictive performance. The best CodeBERT model (XGBoost) achieved:
+
+   * F1-score: 0.1315 vs 0.6075
+   * ROC-AUC: 0.7420 vs 0.8029
+   * MCC: 0.1418 vs 0.4178
+
+- The large performance gap indicates that semantic embeddings alone are insufficient for accurate Just-in-Time defect prediction within the current experimental setup.
+
+- Although CodeBERT captures semantic characteristics of code changes, it does not explicitly encode important historical and process-related information such as code churn, developer experience, subsystem history, and change entropy, which are available in traditional JIT metrics.
+
+- The relatively low MCC values suggest limited capability in correctly handling the minority buggy class, despite the semantic information contained in the embeddings.
+
+- The results imply that semantic representations may serve better as complementary features rather than standalone predictors of software defects.
+
+- The experiment demonstrates that contextual software engineering information remains critical for defect prediction and motivates feature fusion experiments combining JIT metrics with CodeBERT embeddings.
+
+---
+
+## Key Findings
+
+* Traditional JIT metrics significantly outperformed standalone CodeBERT semantic features.
+* Semantic embeddings alone were unable to capture defect-inducing patterns as effectively as handcrafted software engineering metrics.
+* CodeBERT representations may still provide useful complementary information when combined with JIT metrics.
+* These results strongly justify the need for feature fusion experiments (Experiments 4 and 7) to investigate whether semantic information can enhance traditional defect prediction models rather than replace them.
+
+---
+
