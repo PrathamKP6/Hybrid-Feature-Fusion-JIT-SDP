@@ -370,7 +370,7 @@ HYBRID-FEATURE-FUSION/
 │   ├── experiment_4_jit_codebert.py
 │   ├── experiment_5_jit_reasoning.py
 │   ├── experiment_6_codebert_reasoning.py
-│   └── experiment_7_full_fusion.py
+│   └── experiment_4e_stacking.py
 │
 ├── results/
 │   ├── experiment_1/
@@ -379,7 +379,7 @@ HYBRID-FEATURE-FUSION/
 │   ├── experiment_4/
 │   ├── experiment_5/
 │   ├── experiment_6/
-│   └── experiment_7/
+│   └── experiment_4e/
 │
 └── README.md
 ```

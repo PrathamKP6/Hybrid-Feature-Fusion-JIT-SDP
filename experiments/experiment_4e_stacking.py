@@ -1,4 +1,4 @@
-"""Experiment 7: Late Fusion / Stacking Ensemble.
+"""Experiment 4e: Late Fusion / Stacking Ensemble.
 
 This script evaluates whether semantic CodeBERT PCA features provide
 complementary information to JIT metrics through model-level fusion.
@@ -37,7 +37,7 @@ from preprocessing.temporal_split import temporal_train_test_split
 from utils.metrics import compute_classification_metrics
 
 INPUT_PATH = PROJECT_ROOT / "results" / "data" / "frozen_sample_dataset.csv"
-OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_7"
+OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_4e"
 METRICS_DIR = OUTPUT_DIR / "metrics"
 PLOTS_DIR = OUTPUT_DIR / "plots"
 MODELS_DIR = OUTPUT_DIR / "models"
@@ -325,7 +325,7 @@ def main() -> None:
         "top25_score": np.asarray(top25_result["y_score"]),
         "stacking_score": stacking_test_probs,
     })
-    save_predictions(predictions, PREDICTIONS_DIR / "experiment_7_predictions.csv")
+    save_predictions(predictions, PREDICTIONS_DIR / "experiment_4e_predictions.csv")
 
     logger.info("Experiment 7 complete. Results saved to %s", OUTPUT_DIR)
 
