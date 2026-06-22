@@ -152,7 +152,7 @@ CodeBERT + LLM
 
 ## Experiment 7
 
-JIT + CodeBERT + LLM
+Late fusion stacking ensemble using JIT metrics and PCA-reduced CodeBERT prediction probabilities.
 
 ---
 

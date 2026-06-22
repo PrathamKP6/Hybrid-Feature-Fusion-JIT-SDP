@@ -30,8 +30,8 @@ from utils.metrics import compute_classification_metrics
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-INPUT_PATH = PROJECT_ROOT / "results" / "frozen_sample_dataset.csv"
-RESULTS_DIR = PROJECT_ROOT / "results"
+INPUT_PATH = PROJECT_ROOT / "results" / "data" / "frozen_sample_dataset.csv"
+RESULTS_DIR = PROJECT_ROOT / "results" / "experiment_4d"
 BASELINE_JIT_ROC_AUC = 0.803
 PREVIOUS_TOP25_ROC_AUC = 0.792
 

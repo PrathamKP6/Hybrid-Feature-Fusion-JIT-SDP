@@ -24,8 +24,8 @@ logger = logging.getLogger(__name__)
 
 DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset_with_embeddings_pca384.csv"
 RESULTS_DIR = PROJECT_ROOT / "results"
-FROZEN_SAMPLE_PATH = RESULTS_DIR / "frozen_sample_dataset.csv"
-FROZEN_COMMIT_IDS_PATH = RESULTS_DIR / "frozen_sample_commit_ids.csv"
+FROZEN_SAMPLE_PATH = RESULTS_DIR / "data" / "frozen_sample_dataset.csv"
+FROZEN_COMMIT_IDS_PATH = RESULTS_DIR / "data" / "frozen_sample_commit_ids.csv"
 
 
 def main() -> None:

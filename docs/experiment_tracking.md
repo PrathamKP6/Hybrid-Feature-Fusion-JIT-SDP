@@ -109,6 +109,49 @@ Evaluate semantic code representations.
 
 ---
 
+# Experiment 7 — Late Fusion / Stacking Ensemble
+
+## Objective
+
+Evaluate whether semantic CodeBERT PCA features provide complementary information to JIT metrics through model-level fusion.
+
+## Method
+
+* Train XGBoost on JIT metrics only.
+* Train XGBoost on the first 25 PCA-reduced CodeBERT components.
+* Train XGBoost on JIT + full PCA fusion.
+* Train XGBoost on JIT + top-25 PCA fusion.
+* Train a Logistic Regression meta-learner on JIT and semantic prediction probabilities.
+
+## Results
+
+| Model | Accuracy | Precision | Recall | F1 | ROC-AUC | PR-AUC | MCC |
+| ----- | -------- | --------- | ------ | --- | ------- | ------ | ----- |
+| JIT Only | 0.737 | 0.5507 | 0.6772 | 0.6075 | 0.8029 | 0.6223 | 0.4178 |
+| PCA Only | 0.651 | 0.4159 | 0.3993 | 0.4075 | 0.6533 | 0.3859 | 0.1603 |
+| Early Fusion | 0.6915 | 0.4708 | 0.2146 | 0.2949 | 0.6867 | 0.4309 | 0.1480 |
+| Top-25 Fusion | 0.735 | 0.5583 | 0.5657 | 0.5620 | 0.7817 | 0.5814 | 0.3720 |
+| Stacking Ensemble | 0.707 | 0.7027 | 0.0433 | 0.0815 | 0.8040 | 0.6127 | 0.1204 |
+
+## Threshold tuning
+
+Tuning the stacking model decision threshold produced the best F1 at threshold `0.1`:
+
+* Precision: 0.5027
+* Recall: 0.7787
+* F1: 0.6110
+* MCC: 0.4115
+
+## Observations
+
+* The stacking ensemble achieved the highest ROC-AUC of all configurations (`0.8040`).
+* Threshold tuning improved the stacking F1 slightly above the JIT-only baseline: `0.6110` vs `0.6075`.
+* JIT-only remained stronger on MCC and precision, indicating that stacking trades some precision for higher recall.
+* The best stacking threshold was low (`0.1`), which suggests the meta-learner outputs conservative positive probabilities for the buggy class.
+* These results confirm that model-level fusion can recover a small F1 improvement while still preserving the strong JIT baseline.
+
+---
+
 ## Key Findings
 
 * Traditional JIT metrics significantly outperformed standalone CodeBERT semantic features.
