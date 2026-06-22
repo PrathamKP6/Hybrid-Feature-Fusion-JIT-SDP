@@ -138,21 +138,25 @@ CodeBERT Features Only
 
 LLM Reasoning Features Only
 
-## Experiment 4
+## Experiment 4a
 
-JIT + CodeBERT
+JIT + CodeBERT feature fusion
 
-## Experiment 5
+## Experiment 4b
 
-JIT + LLM
+JIT + CodeBERT feature selection
 
-## Experiment 6
+## Experiment 4c
 
-CodeBERT + LLM
+Top-K PCA selection for JIT + CodeBERT fusion
 
-## Experiment 7
+## Experiment 4d
 
-Late fusion stacking ensemble using JIT metrics and PCA-reduced CodeBERT prediction probabilities.
+Late fusion stacking ensemble using JIT and CodeBERT meta-level fusion
+
+## Experiment 4e
+
+Feature group ablation comparing JIT-only, PCA-only, and fusion configurations
 
 ---
 
@@ -160,7 +164,7 @@ Late fusion stacking ensemble using JIT metrics and PCA-reduced CodeBERT predict
 
 * Random Forest
 * XGBoost
-* LightGBM (Experiment 7)
+* LightGBM (used in current and planned hybrid experiments)
 
 ---
 

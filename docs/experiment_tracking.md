@@ -85,7 +85,7 @@ Evaluate semantic code representations.
 
 ## Observations:
 
-## Observations
+
 
 - XGBoost outperformed Random Forest across all evaluation metrics, indicating that boosting methods are more effective in utilizing semantic CodeBERT representations for defect prediction.
 
@@ -109,21 +109,86 @@ Evaluate semantic code representations.
 
 ---
 
-# Experiment 7 — Late Fusion / Stacking Ensemble
+# Experiment 4a — JIT + CodeBERT Fusion
 
 ## Objective
 
-Evaluate whether semantic CodeBERT PCA features provide complementary information to JIT metrics through model-level fusion.
-
-## Method
-
-* Train XGBoost on JIT metrics only.
-* Train XGBoost on the first 25 PCA-reduced CodeBERT components.
-* Train XGBoost on JIT + full PCA fusion.
-* Train XGBoost on JIT + top-25 PCA fusion.
-* Train a Logistic Regression meta-learner on JIT and semantic prediction probabilities.
+Evaluate whether combining traditional JIT metrics with PCA-reduced CodeBERT features improves defect prediction.
 
 ## Results
+
+| Model | Accuracy | Precision | Recall | F1 | ROC-AUC | PR-AUC | MCC |
+| ----- | -------- | --------- | ------ | --- | ------- | ------ | ----- |
+| Random Forest | 0.6965 | 0.2000 | 0.0033 | 0.0065 | 0.6869 | 0.4042 | -0.0155 |
+| XGBoost | 0.6915 | 0.4708 | 0.2146 | 0.2949 | 0.6867 | 0.4309 | 0.1480 |
+
+## Observations:
+
+- XGBoost outperformed Random Forest, but the fusion model still underperformed the JIT-only baseline.
+- The best XGBoost model produced low recall and moderate precision, suggesting the fused feature set added noise rather than signal.
+- The ROC-AUC of 0.6867 is notably below the JIT-only performance, indicating that naive feature concatenation with CodeBERT PCA features did not improve predictive quality.
+- This result highlights the importance of careful feature selection and model-level fusion when combining semantic and process features.
+
+---
+
+# Experiment 4b — Feature Selection for Fusion
+
+## Objective
+
+Identify whether selecting the most important PCA features improves JIT + CodeBERT fusion performance.
+
+## Results
+
+* Best model: XGBoost
+* Best selection method: RF importance
+* Best top-k: 25
+* ROC-AUC: 0.7919
+* PR-AUC: 0.6052
+* F1: 0.5841
+* MCC: 0.3987
+
+## Observations:
+
+- Selecting the top 25 PCA features improved fusion performance relative to unselected PCA fusion.
+- However, the best fusion result still remained below the JIT-only ROC-AUC baseline.
+- The fact that RF-based feature importance yielded the best subset suggests that model-guided selection is more effective than raw PCA alone.
+- This experiment indicates that semantic feature selection can reduce noise, but feature-level fusion still has limited benefit without stronger alignment to the defect signal.
+
+---
+
+# Experiment 4c — Top-K PCA Selection
+
+## Objective
+
+Evaluate how many top PCA dimensions are needed to maximize hybrid fusion performance.
+
+## Results
+
+* Best k: 15
+* ROC-AUC: 0.7913
+* PR-AUC: 0.5933
+* F1: 0.5860
+* MCC: 0.4008
+* Precision: 0.5690
+* Recall: 0.6040
+* Accuracy: 0.7435
+
+## Observations:
+
+- The top 15 PCA features produced the best hybrid fusion performance in this sweep.
+- Even with aggressive dimensionality reduction, the best top-k fusion still did not exceed the strong JIT-only baseline.
+- This suggests that a compact semantic representation can preserve much of the useful signal, but additional fusion complexity is required to exceed traditional metrics.
+- The relatively balanced precision and recall at k=15 indicate a useful tradeoff between model sensitivity and specificity.
+
+---
+
+# Experiment 4d — Late Fusion / Stacking Ensemble
+
+## Objective
+
+Evaluate whether model-level fusion of JIT and semantic predictions can recover complementary information.
+
+## Results (default thresholds)
 
 | Model | Accuracy | Precision | Recall | F1 | ROC-AUC | PR-AUC | MCC |
 | ----- | -------- | --------- | ------ | --- | ------- | ------ | ----- |
@@ -135,29 +200,45 @@ Evaluate whether semantic CodeBERT PCA features provide complementary informatio
 
 ## Threshold tuning
 
-Tuning the stacking model decision threshold produced the best F1 at threshold `0.1`:
-
+* Best threshold: 0.1
 * Precision: 0.5027
 * Recall: 0.7787
 * F1: 0.6110
 * MCC: 0.4115
 
-## Observations
+## Observations:
 
-* The stacking ensemble achieved the highest ROC-AUC of all configurations (`0.8040`).
-* Threshold tuning improved the stacking F1 slightly above the JIT-only baseline: `0.6110` vs `0.6075`.
-* JIT-only remained stronger on MCC and precision, indicating that stacking trades some precision for higher recall.
-* The best stacking threshold was low (`0.1`), which suggests the meta-learner outputs conservative positive probabilities for the buggy class.
-* These results confirm that model-level fusion can recover a small F1 improvement while still preserving the strong JIT baseline.
+- The stacking ensemble achieved the highest ROC-AUC among all tested configurations.
+- Default classification threshold produced very low recall and poor F1, demonstrating the need for threshold tuning.
+- After tuning to threshold 0.1, the stacking model slightly improved F1 over the JIT-only baseline and matched its ranking performance more closely.
+- The JIT-only baseline remained stronger on MCC and precision, indicating that ensemble fusion added recall at the cost of some precision.
+- This experiment shows that late fusion is a viable way to leverage complementary semantic predictions, but threshold calibration is essential.
 
 ---
 
-## Key Findings
+# Experiment 4e — Feature Group Ablation
 
-* Traditional JIT metrics significantly outperformed standalone CodeBERT semantic features.
-* Semantic embeddings alone were unable to capture defect-inducing patterns as effectively as handcrafted software engineering metrics.
-* CodeBERT representations may still provide useful complementary information when combined with JIT metrics.
-* These results strongly justify the need for feature fusion experiments (Experiments 4 and 7) to investigate whether semantic information can enhance traditional defect prediction models rather than replace them.
+## Objective
+
+Compare JIT-only, PCA-only, and JIT+CodeBERT fusion to determine which feature group drives the best performance.
+
+## Results
+
+* Best model: JIT-only
+* JIT-only ROC-AUC: 0.8029
+* PCA-only ROC-AUC: 0.6819
+* Fusion ROC-AUC: 0.6869
+* JIT-only PR-AUC: 0.6223
+* Fusion PR-AUC: 0.4309
+* Fusion gain over JIT: -0.1160
+* Fusion gain over PCA: +0.0050
+
+## Observations:
+
+- JIT-only remained the strongest configuration, outperforming both PCA-only and JIT+CodeBERT fusion.
+- The fusion model degraded performance relative to JIT-only, showing that the added semantic features did not improve the baseline in this ablation setting.
+- Fusion offered a small improvement over PCA-only, indicating that JIT features are the dominant signal.
+- These results reinforce the conclusion that semantic CodeBERT features are most useful when carefully combined with process metrics and calibrated at the model level.
 
 ---
 

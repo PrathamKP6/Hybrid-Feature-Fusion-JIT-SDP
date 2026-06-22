@@ -248,20 +248,9 @@ Models:
 
 ---
 
-## Experiment 4
+## Experiment 4a
 
-### JIT + CodeBERT
-
-Models:
-
-- Random Forest
-- XGBoost
-
----
-
-## Experiment 5
-
-### JIT + LLM
+### JIT + CodeBERT Fusion
 
 Models:
 
@@ -270,9 +259,9 @@ Models:
 
 ---
 
-## Experiment 6
+## Experiment 4b
 
-### CodeBERT + LLM
+### JIT + CodeBERT Feature Selection
 
 Models:
 
@@ -281,21 +270,37 @@ Models:
 
 ---
 
-## Experiment 7
+## Experiment 4c
 
-### Full Hybrid Fusion
-
-Features:
-
-```text
-JIT + CodeBERT + LLM
-```
+### Top-K PCA Fusion
 
 Models:
 
 - Random Forest
 - XGBoost
-- LightGBM
+
+---
+
+## Experiment 4d
+
+### Late Fusion / Stacking Ensemble
+
+Models:
+
+- Random Forest
+- XGBoost
+- Logistic Regression (meta-learner)
+
+---
+
+## Experiment 4e
+
+### Feature Group Ablation
+
+Models:
+
+- Random Forest
+- XGBoost
 
 ---
 
@@ -367,19 +372,21 @@ HYBRID-FEATURE-FUSION/
 │   ├── experiment_1_jit_only.py
 │   ├── experiment_2_codebert_only.py
 │   ├── experiment_3_reasoning_only.py
-│   ├── experiment_4_jit_codebert.py
-│   ├── experiment_5_jit_reasoning.py
-│   ├── experiment_6_codebert_reasoning.py
-│   └── experiment_4e_stacking.py
+│   ├── experiments/exp4/experiment_4a_jit_codebert.py
+│   ├── experiments/exp4/experiment_4b_feature_selection.py
+│   ├── experiments/exp4/experiment_4c_feature_selection.py
+│   ├── experiments/exp4/experiment_4d_stacking.py
+│   ├── experiments/exp4/experiment_4e_feature_group_ablation.py
 │
 ├── results/
 │   ├── experiment_1/
 │   ├── experiment_2/
 │   ├── experiment_3/
-│   ├── experiment_4/
-│   ├── experiment_5/
-│   ├── experiment_6/
-│   └── experiment_4e/
+│   ├── results/exp4/experiment_4a/
+│   ├── results/exp4/experiment_4b/
+│   ├── results/exp4/experiment_4c/
+│   ├── results/exp4/experiment_4d/
+│   ├── results/exp4/experiment_4e/
 │
 └── README.md
 ```

@@ -1,0 +1,9 @@
+{
+  "best_method": "rf_importance",
+  "best_model": "xgb",
+  "best_k": "25",
+  "best_roc_auc": 0.7918705897604541,
+  "best_pr_auc": 0.6051851647871839,
+  "best_f1": 0.5841423948220065,
+  "best_mcc": 0.39869942863224567
+}
