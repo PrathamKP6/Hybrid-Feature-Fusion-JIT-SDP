@@ -1,4 +1,4 @@
-"""Experiment 4c: Feature selection for JIT + CodeBERT fusion.
+"""Experiment 4b: Feature selection for JIT + CodeBERT fusion.
 
 This script evaluates whether feature selection improves the performance of a
 JIT + PCA-reduced CodeBERT fusion model. It compares three selection methods:
@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 INPUT_PATH = PROJECT_ROOT / "results" / "data" / "frozen_sample_dataset.csv"
-OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_4c"
+OUTPUT_DIR = PROJECT_ROOT / "results" / "exp4" / "experiment_4b"
 METRICS_DIR = OUTPUT_DIR / "metrics"
 PREDICTIONS_DIR = OUTPUT_DIR / "predictions"
 PLOTS_DIR = OUTPUT_DIR / "plots"
@@ -277,7 +277,7 @@ def summarize_best_configuration(results: Dict[str, Dict[str, Dict[str, float]]]
 
 
 def main() -> None:
-    logger.info("Experiment 4c (feature selection) starting")
+    logger.info("Experiment 4b (feature selection) starting")
     ensure_directories()
 
     if not INPUT_PATH.exists():
@@ -371,13 +371,13 @@ def main() -> None:
 
     save_json({method: rankings[method] for method in SELECTION_METHODS}, METRICS_DIR / "feature_rankings.json")
 
-    plot_metric_line_comparison(results, PLOTS_DIR / "experiment_4c_metric_line_comparison.png")
-    plot_best_roc_by_k(results, PLOTS_DIR / "experiment_4c_best_roc_by_k.png")
+    plot_metric_line_comparison(results, PLOTS_DIR / "experiment_4b_metric_line_comparison.png")
+    plot_best_roc_by_k(results, PLOTS_DIR / "experiment_4b_best_roc_by_k.png")
 
     summary = summarize_best_configuration(results)
     save_json(summary, METRICS_DIR / "feature_selection_summary.json")
 
-    logger.info("Experiment 4c completed successfully")
+    logger.info("Experiment 4b completed successfully")
 
 
 if __name__ == "__main__":

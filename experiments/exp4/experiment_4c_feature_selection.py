@@ -1,4 +1,4 @@
-"""Experiment 4d: Optimal Top-K Semantic Feature Selection Study.
+"""Experiment 4c: Optimal Top-K Semantic Feature Selection Study.
 
 This script evaluates whether a smaller subset of the most important
 PCA-reduced CodeBERT features can outperform the JIT-only baseline for
@@ -31,7 +31,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 INPUT_PATH = PROJECT_ROOT / "results" / "data" / "frozen_sample_dataset.csv"
-RESULTS_DIR = PROJECT_ROOT / "results" / "experiment_4d"
+RESULTS_DIR = PROJECT_ROOT / "results" / "exp4" / "experiment_4c"
 BASELINE_JIT_ROC_AUC = 0.803
 PREVIOUS_TOP25_ROC_AUC = 0.792
 

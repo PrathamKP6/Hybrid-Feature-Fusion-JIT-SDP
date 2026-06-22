@@ -34,7 +34,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 INPUT_PATH = PROJECT_ROOT / "results" / "data" / "frozen_sample_dataset.csv"
-OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_4"
+OUTPUT_DIR = PROJECT_ROOT / "results" / "exp4" / "experiment_4a"
 METRICS_DIR = OUTPUT_DIR / "metrics"
 PREDICTIONS_DIR = OUTPUT_DIR / "predictions"
 PLOTS_DIR = OUTPUT_DIR / "plots"
@@ -287,7 +287,7 @@ def main() -> None:
     save_json(xgb_metrics, METRICS_DIR / "xgboost_metrics.json")
 
     summary = {
-        "experiment": "experiment_4_jit_codebert",
+        "experiment": "experiment_4a_jit_codebert",
         "dataset_rows": len(df_reduced),
         "train_rows": len(X_train),
         "test_rows": len(X_test),
@@ -309,19 +309,19 @@ def main() -> None:
         xgb_pred=xgb_pred.values,
         xgb_score=xgb_score,
     )
-    predictions_path = PREDICTIONS_DIR / "experiment_4_jit_codebert_predictions.csv"
+    predictions_path = PREDICTIONS_DIR / "experiment_4a_jit_codebert_predictions.csv"
     predictions_df.to_csv(predictions_path, index=False)
     logger.info("Saved predictions to %s", predictions_path)
 
     save_feature_importance_csv(
         rf_model,
         FEATURE_COLUMNS,
-        METRICS_DIR / "experiment_4_rf_feature_importance.csv",
+        METRICS_DIR / "experiment_4a_rf_feature_importance.csv",
     )
     save_feature_importance_csv(
         xgb_model,
         FEATURE_COLUMNS,
-        METRICS_DIR / "experiment_4_xgb_feature_importance.csv",
+        METRICS_DIR / "experiment_4a_xgb_feature_importance.csv",
     )
 
     plot_roc_pr(
@@ -330,25 +330,25 @@ def main() -> None:
             "Random Forest": rf_score,
             "XGBoost": xgb_score,
         },
-        PLOTS_DIR / "experiment_4_jit_codebert_roc_pr.png",
+        PLOTS_DIR / "experiment_4a_jit_codebert_roc_pr.png",
     )
 
     plot_feature_importance(
         rf_model,
         FEATURE_COLUMNS,
-        PLOTS_DIR / "experiment_4_jit_codebert_rf_feature_importance.png",
+        PLOTS_DIR / "experiment_4a_jit_codebert_rf_feature_importance.png",
         title="Random Forest Feature Importance",
     )
     plot_feature_importance(
         xgb_model,
         FEATURE_COLUMNS,
-        PLOTS_DIR / "experiment_4_jit_codebert_xgb_feature_importance.png",
+        PLOTS_DIR / "experiment_4a_jit_codebert_xgb_feature_importance.png",
         title="XGBoost Feature Importance",
     )
 
     plot_model_comparison(
         {"random_forest": rf_metrics, "xgboost": xgb_metrics},
-        PLOTS_DIR / "experiment_4_jit_codebert_model_comparison.png",
+        PLOTS_DIR / "experiment_4a_jit_codebert_model_comparison.png",
     )
 
     logger.info("Experiment 4 completed successfully")

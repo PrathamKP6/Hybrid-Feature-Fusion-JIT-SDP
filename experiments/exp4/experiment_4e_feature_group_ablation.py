@@ -32,7 +32,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 INPUT_PATH = PROJECT_ROOT / "results" / "data" / "frozen_sample_dataset.csv"
-OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_5"
+OUTPUT_DIR = PROJECT_ROOT / "results" / "exp4" / "experiment_4e"
 METRICS_DIR = OUTPUT_DIR / "metrics"
 PREDICTIONS_DIR = OUTPUT_DIR / "predictions"
 PLOTS_DIR = OUTPUT_DIR / "plots"
@@ -328,31 +328,31 @@ def main() -> None:
     if plots_y_true is None:
         raise RuntimeError("No experiment results were generated")
 
-    plot_roc_pr_comparison(scores_for_plot, plots_y_true, PLOTS_DIR / "experiment_5_roc_pr_comparison.png")
-    plot_metric_bars({k: v["metrics"] for k, v in experiments.items()}, PLOTS_DIR / "experiment_5_metric_comparison.png")
+    plot_roc_pr_comparison(scores_for_plot, plots_y_true, PLOTS_DIR / "experiment_4e_roc_pr_comparison.png")
+    plot_metric_bars({k: v["metrics"] for k, v in experiments.items()}, PLOTS_DIR / "experiment_4e_metric_comparison.png")
 
     fusion_rf = experiments["rf_fusion"]["model"]
     fusion_xgb = experiments["xgb_fusion"]["model"]
     save_feature_importance_csv(
         fusion_rf,
         FEATURE_SETS["fusion"],
-        METRICS_DIR / "experiment_5_rf_fusion_feature_importance.csv",
+        METRICS_DIR / "experiment_4e_rf_fusion_feature_importance.csv",
     )
     save_feature_importance_csv(
         fusion_xgb,
         FEATURE_SETS["fusion"],
-        METRICS_DIR / "experiment_5_xgb_fusion_feature_importance.csv",
+        METRICS_DIR / "experiment_4e_xgb_fusion_feature_importance.csv",
     )
     plot_feature_importance(
         fusion_rf,
         FEATURE_SETS["fusion"],
-        PLOTS_DIR / "experiment_5_rf_fusion_feature_importance.png",
+        PLOTS_DIR / "experiment_4e_rf_fusion_feature_importance.png",
         title="RF Fusion Feature Importance",
     )
     plot_feature_importance(
         fusion_xgb,
         FEATURE_SETS["fusion"],
-        PLOTS_DIR / "experiment_5_xgb_fusion_feature_importance.png",
+        PLOTS_DIR / "experiment_4e_xgb_fusion_feature_importance.png",
         title="XGB Fusion Feature Importance",
     )
 
