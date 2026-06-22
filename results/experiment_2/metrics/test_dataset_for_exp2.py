@@ -3,7 +3,7 @@ import numpy as np
 import ast
 
 # Load frozen sample
-df = pd.read_csv('results/frozen_sample_dataset.csv', nrows=100)
+df = pd.read_csv('results/data/frozen_sample_dataset.csv', nrows=100)
 
 # Parse embedding column
 def parse_embedding(x):

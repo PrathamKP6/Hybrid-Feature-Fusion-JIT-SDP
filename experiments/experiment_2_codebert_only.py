@@ -34,7 +34,7 @@ from utils.metrics import compute_classification_metrics
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-INPUT_PATH = PROJECT_ROOT / "results" / "frozen_sample_dataset.csv"
+INPUT_PATH = PROJECT_ROOT / "results" / "data" / "frozen_sample_dataset.csv"
 OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_2"
 METRICS_DIR = OUTPUT_DIR / "metrics"
 MODELS_DIR = OUTPUT_DIR / "models"
