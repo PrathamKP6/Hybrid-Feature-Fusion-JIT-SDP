@@ -36,6 +36,6 @@ print("\nMissing values:")
 print(df_final.isnull().sum())
 
 # Save final dataset
-df_final.to_csv("final_dataset.csv", index=False)
+df_final.to_csv("data/final_dataset.csv", index=False)
 
-print("\nSaved as final_dataset.csv")
+print("\nSaved as data/final_dataset.csv")

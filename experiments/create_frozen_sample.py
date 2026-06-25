@@ -18,14 +18,14 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from preprocessing.load_data import load_commits_csv
 from preprocessing.sampling import filter_commits_by_date, stratified_sample
+from utils.paths import FINAL_DATASET_EMBEDDINGS_PCA384_CSV, FROZEN_SAMPLE_CSV, FROZEN_SAMPLE_COMMIT_IDS_CSV, RESULTS_DIR
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset_with_embeddings_pca384.csv"
-RESULTS_DIR = PROJECT_ROOT / "results"
-FROZEN_SAMPLE_PATH = RESULTS_DIR / "frozen_sample_dataset.csv"
-FROZEN_COMMIT_IDS_PATH = RESULTS_DIR / "frozen_sample_commit_ids.csv"
+DATA_PATH = FINAL_DATASET_EMBEDDINGS_PCA384_CSV
+FROZEN_SAMPLE_PATH = FROZEN_SAMPLE_CSV
+FROZEN_COMMIT_IDS_PATH = FROZEN_SAMPLE_COMMIT_IDS_CSV
 
 
 def main() -> None:

@@ -310,11 +310,13 @@ def main() -> None:
             if list(frame.columns) != COLUMNS:
                 raise ValueError(f"{frame_name} dataset schema mismatch: {list(frame.columns)}")
         final_df = pd.concat([java_df, python_df, cpp_df], ignore_index=True)
-        final_df.to_csv(base_dir / "final_multilanguage_dataset.csv", index=False)
+        output_path = Path(__file__).resolve().parent.parent / "data" / "final_multilanguage_dataset.csv"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        final_df.to_csv(output_path, index=False)
         print(final_df.shape)
         print(final_df["buggy"].value_counts(dropna=False))
         print(final_df.isna().sum())
-        print(f"Saved {base_dir / 'final_multilanguage_dataset.csv'}")
+        print(f"Saved {output_path}")
     else:
         print("java_dataset.csv not found; skipped final merge.")
 

@@ -47,6 +47,9 @@ from transformers import AutoTokenizer, AutoModel
 from tqdm.auto import tqdm
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
 class TextDataset(Dataset):
     def __init__(self, items: List[Tuple[int, str]]):
         # items: list of (orig_index, text)
@@ -258,8 +261,8 @@ def assemble_and_save_final(df: pd.DataFrame, processed_map: Dict[int, int], out
 
 def main():
     parser = argparse.ArgumentParser(description='Resumable CodeBERT embedding extraction')
-    parser.add_argument('--input', type=str, default='./final_multilanguage_dataset.csv')
-    parser.add_argument('--output', type=str, default='./final_multilanguage_dataset_with_embeddings.csv')
+    parser.add_argument('--input', type=str, default=str(PROJECT_ROOT / 'data' / 'final_multilanguage_dataset.csv'))
+    parser.add_argument('--output', type=str, default=str(PROJECT_ROOT / 'data' / 'final_multilanguage_dataset_with_embeddings.csv'))
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_workers', type=int, default=4)
     parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints_codebert')

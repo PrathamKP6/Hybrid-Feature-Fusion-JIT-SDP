@@ -33,7 +33,7 @@ pd.set_option('display.max_columns', None)
 print("Loading dataset...")
 dataset_path = Path("final_multilanguage.csv")
 if not dataset_path.exists():
-    dataset_path = Path("final_multilanguage_dataset.csv")
+    dataset_path = Path("data/final_multilanguage_dataset.csv")
 
 print(f"Reading from: {dataset_path}")
 df = pd.read_csv(dataset_path)

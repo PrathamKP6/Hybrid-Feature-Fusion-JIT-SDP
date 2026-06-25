@@ -373,9 +373,9 @@ Text Columns Analysis:
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize CodeBERT embeddings dataset')
-    parser.add_argument('--input', type=str, default='./final_multilanguage_dataset_with_embeddings.csv',
+    parser.add_argument('--input', type=str, default=str(Path('data') / 'final_multilanguage_dataset_with_embeddings.csv'),
                        help='Path to the embeddings CSV file')
-    parser.add_argument('--output-dir', type=str, default='./visualizations',
+    parser.add_argument('--output-dir', type=str, default=str(Path('embeddings_and_pca_code') / 'visualizations'),
                        help='Output directory for visualizations')
     parser.add_argument('--sample-size', type=int, default=5000,
                        help='Sample size for t-SNE/UMAP (smaller=faster)')
