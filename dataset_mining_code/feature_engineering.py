@@ -20,7 +20,7 @@ import pandas as pd
 pd.set_option('display.max_columns', None)
 
 print("Loading dataset...")
-df = pd.read_csv("final_dataset.csv")
+df = pd.read_csv("data/final_dataset.csv")
 
 print(df.shape)
 print(df.columns)

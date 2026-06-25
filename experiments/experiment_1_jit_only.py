@@ -26,14 +26,14 @@ from preprocessing.temporal_split import temporal_train_test_split
 from models.train_random_forest import train_random_forest
 from models.train_xgboost import train_xgboost
 from utils.metrics import compute_classification_metrics
+from utils.paths import EXPERIMENT1_DIR, FINAL_DATASET_CSV
 
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset.csv"
-EXPERIMENT_DIR = PROJECT_ROOT / "results" / "experiment_1"
+DATA_PATH = FINAL_DATASET_CSV
+EXPERIMENT_DIR = EXPERIMENT1_DIR
 METRICS_DIR = EXPERIMENT_DIR / "metrics"
 PREDICTIONS_DIR = EXPERIMENT_DIR / "predictions"
 PLOTS_DIR = EXPERIMENT_DIR / "plots"

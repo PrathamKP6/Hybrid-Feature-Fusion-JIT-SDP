@@ -140,8 +140,8 @@ def process_full_dataset(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Apply PCA reduction to embedding vectors in a CSV file.")
-    parser.add_argument("--input", type=str, default="final_multilanguage_dataset_with_embeddings.csv", help="Path to the source CSV file.")
-    parser.add_argument("--output", type=str, default="final_multilanguage_dataset_with_embeddings_pca384.csv", help="Path for the output CSV with reduced embeddings.")
+    parser.add_argument("--input", type=str, default=str(Path("data") / "final_multilanguage_dataset_with_embeddings.csv"), help="Path to the source CSV file.")
+    parser.add_argument("--output", type=str, default=str(Path("data") / "final_multilanguage_dataset_with_embeddings_pca384.csv"), help="Path for the output CSV with reduced embeddings.")
     parser.add_argument("--components", type=int, default=384, help="Number of PCA components to keep.")
     parser.add_argument("--sample-size", type=int, default=10000, help="Number of embeddings sampled to fit PCA.")
     parser.add_argument("--chunk-size", type=int, default=2000, help="Number of rows to process per chunk when transforming the full dataset.")

@@ -10,6 +10,7 @@ import argparse
 import json
 import os
 import time
+from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
@@ -240,8 +241,8 @@ def plot_comparison(results: pd.DataFrame, output_dir: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sample-based PCA comparison for embedding compression")
-    parser.add_argument("--input", type=str, default="./final_multilanguage_dataset_with_embeddings.csv", help="Path to the CSV with embeddings")
-    parser.add_argument("--output-dir", type=str, default="./visualizations", help="Directory for reports and plots")
+    parser.add_argument("--input", type=str, default=str(Path("data") / "final_multilanguage_dataset_with_embeddings.csv"), help="Path to the CSV with embeddings")
+    parser.add_argument("--output-dir", type=str, default=str(Path("data") / "visualizations"), help="Directory for reports and plots")
     parser.add_argument("--sample-size", type=int, default=20000, help="Number of embeddings to sample from the CSV")
     parser.add_argument("--chunksize", type=int, default=5000, help="Unused compatibility argument; sampling is bounded by nrows")
     parser.add_argument("--test-fraction", type=float, default=0.2, help="Fraction of the sample held out for evaluation")
