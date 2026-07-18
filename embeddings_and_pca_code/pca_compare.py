@@ -17,6 +17,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
+
+
 def parse_embedding(value) -> np.ndarray:
     """Parse a single embedding cell from the CSV."""
     if isinstance(value, str):
@@ -240,7 +244,7 @@ def plot_comparison(results: pd.DataFrame, output_dir: str) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Sample-based PCA comparison for embedding compression")
-    parser.add_argument("--input", type=str, default="./final_multilanguage_dataset_with_embeddings.csv", help="Path to the CSV with embeddings")
+    parser.add_argument("--input", type=str, default=str(DATA_DIR / "final_multilanguage_dataset_with_embeddings.csv"), help="Path to the CSV with embeddings")
     parser.add_argument("--output-dir", type=str, default="./visualizations", help="Directory for reports and plots")
     parser.add_argument("--sample-size", type=int, default=20000, help="Number of embeddings to sample from the CSV")
     parser.add_argument("--chunksize", type=int, default=5000, help="Unused compatibility argument; sampling is bounded by nrows")

@@ -540,7 +540,9 @@ Text Columns Analysis:
 
 def main():
     parser = argparse.ArgumentParser(description='Visualize CodeBERT embeddings dataset')
-    parser.add_argument('--input', type=str, default='./final_multilanguage_dataset_with_embeddings.csv',
+    project_root = Path(__file__).resolve().parents[1]
+    data_dir = project_root / 'data'
+    parser.add_argument('--input', type=str, default=str(data_dir / 'final_multilanguage_dataset_with_embeddings.csv'),
                        help='Path to the embeddings CSV file')
     parser.add_argument('--output-dir', type=str, default='./visualizations',
                        help='Output directory for visualizations')

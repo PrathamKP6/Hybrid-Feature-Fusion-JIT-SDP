@@ -14,10 +14,10 @@ Workflow:
     6. Maintain progress checkpoints for safe resumption after interruptions.
 
 Input:
-    - final_multilanguage_dataset.csv
+    - data/final_multilanguage_dataset.csv
 
 Output:
-    - final_multilanguage_dataset_with_embeddings.csv
+    - data/final_multilanguage_dataset_with_embeddings.csv
 
 Features:
     - GPU acceleration (CUDA support)
@@ -45,6 +45,10 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 from transformers import AutoTokenizer, AutoModel
 from tqdm.auto import tqdm
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
 
 
 class TextDataset(Dataset):
@@ -258,11 +262,11 @@ def assemble_and_save_final(df: pd.DataFrame, processed_map: Dict[int, int], out
 
 def main():
     parser = argparse.ArgumentParser(description='Resumable CodeBERT embedding extraction')
-    parser.add_argument('--input', type=str, default='./final_multilanguage_dataset.csv')
-    parser.add_argument('--output', type=str, default='./final_multilanguage_dataset_with_embeddings.csv')
+    parser.add_argument('--input', type=str, default=str(DATA_DIR / 'final_multilanguage_dataset.csv'))
+    parser.add_argument('--output', type=str, default=str(DATA_DIR / 'final_multilanguage_dataset_with_embeddings.csv'))
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--num_workers', type=int, default=4)
-    parser.add_argument('--checkpoint_dir', type=str, default='./checkpoints_codebert')
+    parser.add_argument('--checkpoint_dir', type=str, default=str(PROJECT_ROOT / 'embeddings_code' / 'checkpoints_codebert'))
     parser.add_argument('--checkpoint_interval', type=int, default=1000)
     parser.add_argument('--min_free_gb', type=float, default=5.0,
                         help='Minimum free GB required on output drive before starting')

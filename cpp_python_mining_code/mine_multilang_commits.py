@@ -283,6 +283,7 @@ def load_optional_csv(path: Path) -> pd.DataFrame | None:
 
 def main() -> None:
     base_dir = Path(__file__).resolve().parent
+    data_dir = base_dir.parent / "data"
     flask_repo = base_dir / "flask"
     opencv_repo = base_dir / "opencv"
 
@@ -296,7 +297,7 @@ def main() -> None:
         print(f"Mining {spec.name}...")
         df = mine_repository(spec, max_commits=MAX_COMMITS_PER_REPO)
         validate_schema(df)
-        output_path = base_dir / f"{spec.project.replace('/', '_')}_dataset.csv"
+        output_path = data_dir / f"{spec.project.replace('/', '_')}_dataset.csv"
         save_dataset(df, output_path)
         outputs.append(output_path)
         print(f"Saved {output_path} with {len(df)} rows")
@@ -310,11 +311,11 @@ def main() -> None:
             if list(frame.columns) != COLUMNS:
                 raise ValueError(f"{frame_name} dataset schema mismatch: {list(frame.columns)}")
         final_df = pd.concat([java_df, python_df, cpp_df], ignore_index=True)
-        final_df.to_csv(base_dir / "final_multilanguage_dataset.csv", index=False)
+        final_df.to_csv(data_dir / "final_multilanguage_dataset.csv", index=False)
         print(final_df.shape)
         print(final_df["buggy"].value_counts(dropna=False))
         print(final_df.isna().sum())
-        print(f"Saved {base_dir / 'final_multilanguage_dataset.csv'}")
+        print(f"Saved {data_dir / 'final_multilanguage_dataset.csv'}")
     else:
         print("java_dataset.csv not found; skipped final merge.")
 

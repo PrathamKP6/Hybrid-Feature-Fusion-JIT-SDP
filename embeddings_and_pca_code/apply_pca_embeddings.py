@@ -9,6 +9,10 @@ import numpy as np
 import pandas as pd
 
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
+
+
 def parse_embedding(value) -> np.ndarray:
     if isinstance(value, str):
         return np.asarray(json.loads(value), dtype=np.float32)
@@ -140,13 +144,13 @@ def process_full_dataset(
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Apply PCA reduction to embedding vectors in a CSV file.")
-    parser.add_argument("--input", type=str, default="final_multilanguage_dataset_with_embeddings.csv", help="Path to the source CSV file.")
-    parser.add_argument("--output", type=str, default="final_multilanguage_dataset_with_embeddings_pca384.csv", help="Path for the output CSV with reduced embeddings.")
+    parser.add_argument("--input", type=str, default=str(DATA_DIR / "final_multilanguage_dataset_with_embeddings.csv"), help="Path to the source CSV file.")
+    parser.add_argument("--output", type=str, default=str(DATA_DIR / "final_multilanguage_dataset_with_embeddings_pca384.csv"), help="Path for the output CSV with reduced embeddings.")
     parser.add_argument("--components", type=int, default=384, help="Number of PCA components to keep.")
     parser.add_argument("--sample-size", type=int, default=10000, help="Number of embeddings sampled to fit PCA.")
     parser.add_argument("--chunk-size", type=int, default=2000, help="Number of rows to process per chunk when transforming the full dataset.")
-    parser.add_argument("--checkpoint", type=str, default="checkpoints/pca_transform_progress.json", help="Path to the checkpoint JSON file.")
-    parser.add_argument("--model-path", type=str, default="checkpoints/pca_384_model.npz", help="Path to save or load the PCA model.")
+    parser.add_argument("--checkpoint", type=str, default=str(PROJECT_ROOT / "checkpoints" / "pca_transform_progress.json"), help="Path to the checkpoint JSON file.")
+    parser.add_argument("--model-path", type=str, default=str(PROJECT_ROOT / "checkpoints" / "pca_384_model.npz"), help="Path to save or load the PCA model.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite the existing output and restart from scratch.")
     args = parser.parse_args()
 
