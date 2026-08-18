@@ -1,0 +1,50 @@
+{
+  "experiment": "experiment_4a_jit_codebert",
+  "dataset_rows": 10000,
+  "train_rows": 8000,
+  "test_rows": 2000,
+  "jit_features": [
+    "la",
+    "ld",
+    "nf",
+    "ns",
+    "nd",
+    "ent",
+    "ndev",
+    "age",
+    "nuc",
+    "aexp",
+    "arexp",
+    "asexp"
+  ],
+  "codebert_pca_features": "pca_1..pca_384",
+  "models": {
+    "random_forest": {
+      "accuracy": 0.93,
+      "precision": 0.6190476190476191,
+      "recall": 0.0896551724137931,
+      "f1": 0.1566265060240964,
+      "roc_auc": 0.8253815410354122,
+      "pr_auc": 0.3014597961669591,
+      "mcc": 0.2171144828739125,
+      "tn": 1847,
+      "fp": 8,
+      "fn": 132,
+      "tp": 13
+    },
+    "xgboost": {
+      "accuracy": 0.869,
+      "precision": 0.2903225806451613,
+      "recall": 0.5586206896551724,
+      "f1": 0.38207547169811323,
+      "roc_auc": 0.8446584255042291,
+      "pr_auc": 0.36772868465533676,
+      "mcc": 0.33821168106597044,
+      "tn": 1657,
+      "fp": 198,
+      "fn": 64,
+      "tp": 81
+    }
+  },
+  "scale_pos_weight": 4.908419497784343
+}
