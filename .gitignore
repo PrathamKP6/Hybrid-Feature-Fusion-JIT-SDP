@@ -11,12 +11,10 @@ frozen_sample_dataset.csv
 java_only_final_multilanguage_dataset_with_embeddings_pca384.csv
 java_only_frozen_sample_dataset.csv
 results/**/*.csv
-results/**/*.joblib
-results/**/*.json
-results/**/*.png
-results/**/*.pkl
-results/**/*.parquet
-results/**/*.tsv
+
+
+
+
 results/experiment_1/models/*
 results/experiment_2/models/*
 *.joblib
