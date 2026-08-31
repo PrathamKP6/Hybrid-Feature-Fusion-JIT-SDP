@@ -10,4 +10,4 @@ frozen_sample_commit_ids.csv
 frozen_sample_dataset.csv
 results/experiment_1/models/*
 results/experiment_2/models/*
-data/*
+results/data/java_only_frozen_sample_dataset.csv
