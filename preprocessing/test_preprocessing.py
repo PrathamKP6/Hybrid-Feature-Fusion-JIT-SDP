@@ -6,11 +6,7 @@ from preprocessing.sampling import create_stratified_subset
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
-from pathlib import Path
-
-from utils.paths import FINAL_DATASET_CSV
-
-df = load_commits_csv(FINAL_DATASET_CSV)
+df = load_commits_csv("final_multilanguage_dataset.csv")
 
 jit_columns = [
     "la", "ld", "nf", "ns", "nd", "ent",
