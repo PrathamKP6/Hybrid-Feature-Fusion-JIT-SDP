@@ -22,15 +22,16 @@ from preprocessing.sampling import filter_commits_by_date, stratified_sample
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
-DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset_with_embeddings_pca384.csv"
-RESULTS_DIR = PROJECT_ROOT / "results"
-FROZEN_SAMPLE_PATH = RESULTS_DIR / "frozen_sample_dataset.csv"
-FROZEN_COMMIT_IDS_PATH = RESULTS_DIR / "frozen_sample_commit_ids.csv"
+DATA_PATH = PROJECT_ROOT / "data" / "final_multilanguage_dataset_with_embeddings_pca384.csv"
+RESULTS_DATA_DIR = PROJECT_ROOT / "results" / "data"
+FROZEN_SAMPLE_PATH = RESULTS_DATA_DIR / "frozen_sample_dataset.csv"
+FROZEN_COMMIT_IDS_PATH = RESULTS_DATA_DIR / "frozen_sample_commit_ids.csv"
+SAMPLE_RANDOM_STATE = 42
 
 
 def main() -> None:
     """Generate and save frozen sample dataset."""
-    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     logger.info("Loading dataset from %s", DATA_PATH)
     df = load_commits_csv(DATA_PATH)
@@ -43,15 +44,26 @@ def main() -> None:
         start_year=2018,
         end_year=2026,
     )
+    df_filtered = df_filtered.sort_values(
+        by="author_date",
+        kind="mergesort",
+    ).reset_index(drop=True)
     logger.info("After date filtering: %d rows", len(df_filtered))
 
-    logger.info("Applying stratified sampling (project × buggy, target=10000, random_state=42)")
+    logger.info(
+        "Applying stratified sampling (project × buggy, target=10000, random_state=%d)",
+        SAMPLE_RANDOM_STATE,
+    )
     df_sampled = stratified_sample(
         df_filtered,
         group_columns=("project", "buggy"),
         target_size=10000,
-        random_state=42,
+        random_state=SAMPLE_RANDOM_STATE,
     )
+    df_sampled = df_sampled.sort_values(
+        by="author_date",
+        kind="mergesort",
+    ).reset_index(drop=True)
     logger.info("After stratified sampling: %d rows", len(df_sampled))
 
     logger.info("Saving frozen sample to %s", FROZEN_SAMPLE_PATH)
