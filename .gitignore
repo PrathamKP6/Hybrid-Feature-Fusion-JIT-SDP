@@ -13,3 +13,11 @@ results/experiment_2/models/*
 results/data/java_only_frozen_sample_dataset.csv
 data/final_multilanguage_dataset_with_embeddings.csv
 data/java_only_final_multilanguage_dataset_with_embeddings_pca384.csv
+# Large cloned repositories
+cpp_python_mining_code/cpython/
+cpp_python_mining_code/godot/
+cpp_python_mining_code/krita/
+cpp_python_mining_code/opencv/
+
+# Generated CSV files
+cpp_python_mining_code/*.csv
