@@ -1,227 +1,1381 @@
-"""Experiment 2: CodeBERT features only.
-
-Loads the frozen sample dataset and evaluates models using only the
-CodeBERT PCA components (pca_1 .. pca_384). Performs a chronological
-temporal split (first 80% train, last 20% test), trains RandomForest
-and XGBoost models, evaluates metrics, saves models, predictions,
-metrics, and basic ROC/PR plots.
-
-Requirements:
-- Uses `results/frozen_sample_dataset.csv` as input
-- Reuses existing training and metric utilities
 """
+Experiment 2: CodeBERT-Only Baseline
+====================================
+
+Uses the leakage-safe 384-D PCA embeddings generated previously.
+
+Input:
+    results/pca/train_pca384.csv
+    results/pca/validation_pca384.csv
+    results/pca/test_pca384.csv
+
+The PCA files contain the 384-D PCA representation inside the
+existing `embedding` column rather than pca_1 ... pca_384 columns.
+
+Split:
+    Project-wise chronological 70/15/15
+
+Features:
+    384-D PCA-reduced CodeBERT embeddings ONLY
+
+Models:
+    Random Forest
+    XGBoost
+
+No JIT/process features are used.
+No new PCA is fitted.
+No resampling is performed.
+"""
+
 from __future__ import annotations
 
+import ast
 import json
 import logging
-import sys
+import warnings
 from pathlib import Path
-from typing import Sequence
 
+import joblib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.metrics import auc, precision_recall_curve, roc_curve
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    average_precision_score,
+    auc,
+    confusion_matrix,
+    f1_score,
+    matthews_corrcoef,
+    precision_recall_curve,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+    roc_curve,
+)
 
-from models.train_random_forest import train_random_forest
-from models.train_xgboost import train_xgboost
-from preprocessing.temporal_split import temporal_train_test_split
-from utils.metrics import compute_classification_metrics
+from xgboost import XGBClassifier
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
+warnings.filterwarnings("ignore")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s: %(message)s",
+)
+
 logger = logging.getLogger(__name__)
 
-INPUT_PATH = PROJECT_ROOT / "results" / "frozen_sample_dataset.csv"
-OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_2"
+
+# ============================================================
+# PATHS
+# ============================================================
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+PCA_DIR = PROJECT_ROOT / "results" / "pca"
+
+TRAIN_PATH = PCA_DIR / "train_pca384.csv"
+VALIDATION_PATH = PCA_DIR / "validation_pca384.csv"
+TEST_PATH = PCA_DIR / "test_pca384.csv"
+
+OUTPUT_DIR = (
+    PROJECT_ROOT
+    / "results"
+    / "experiment_2_codebert_only"
+)
+
 METRICS_DIR = OUTPUT_DIR / "metrics"
 MODELS_DIR = OUTPUT_DIR / "models"
 PRED_DIR = OUTPUT_DIR / "predictions"
 PLOTS_DIR = OUTPUT_DIR / "plots"
 
-
-def pca_columns(start: int = 1, end: int = 384) -> list[str]:
-    return [f"pca_{i}" for i in range(start, end + 1)]
-
-
-def ensure_prob_array(y_score: np.ndarray) -> np.ndarray:
-    arr = np.asarray(y_score)
-    if arr.ndim == 2 and arr.shape[1] > 1:
-        return arr[:, 1]
-    return arr.ravel()
-
-
-def plot_roc_pr(y_true: Sequence[int], y_score: Sequence[float], out_prefix: Path) -> None:
-    y_true = np.asarray(y_true)
-    y_score = np.asarray(y_score)
-
-    fpr, tpr, _ = roc_curve(y_true, y_score)
-    roc_auc = auc(fpr, tpr)
-    plt.figure()
-    plt.plot(fpr, tpr, label=f"AUC = {roc_auc:.4f}")
-    plt.plot([0, 1], [0, 1], linestyle="--", color="gray")
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.title("ROC Curve")
-    plt.legend(loc="lower right")
-    roc_path = out_prefix.parent / (out_prefix.name + "_roc.png")
-    roc_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(str(roc_path), dpi=150)
-    plt.close()
-
-    precision, recall, _ = precision_recall_curve(y_true, y_score)
-    pr_auc = auc(recall, precision)
-    plt.figure()
-    plt.plot(recall, precision, label=f"AUC = {pr_auc:.4f}")
-    plt.xlabel("Recall")
-    plt.ylabel("Precision")
-    plt.title("Precision-Recall Curve")
-    plt.legend(loc="lower left")
-    pr_path = out_prefix.parent / (out_prefix.name + "_pr.png")
-    pr_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(str(pr_path), dpi=150)
-    plt.close()
+for directory in [
+    METRICS_DIR,
+    MODELS_DIR,
+    PRED_DIR,
+    PLOTS_DIR,
+]:
+    directory.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
 
 
-def save_json(path: Path, data: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as fh:
-        json.dump(data, fh, indent=2)
+# ============================================================
+# CONSTANTS
+# ============================================================
+
+EMBEDDING_COLUMN = "embedding"
+
+EMBEDDING_DIMENSION = 384
+
+TARGET = "buggy"
+
+BOOKKEEPING_COLUMNS = [
+    "commit_id",
+    "project",
+    "author_date",
+]
 
 
-def main() -> None:
-    logger.info("Experiment 2 (CodeBERT only) starting")
+# ============================================================
+# TARGET NORMALIZATION
+# ============================================================
 
-    if not INPUT_PATH.exists():
-        logger.error("Frozen sample not found at %s", INPUT_PATH)
-        raise FileNotFoundError(f"Frozen sample not found: {INPUT_PATH}")
+def normalize_buggy(value):
+    """
+    Convert all expected buggy-label representations into 0/1.
+    """
 
-    import ast
+    if pd.isna(value):
+        return np.nan
 
-    df = pd.read_csv(INPUT_PATH, parse_dates=["author_date"], low_memory=False)
-    logger.info("Loaded frozen sample: %d rows, %d columns", len(df), len(df.columns))
+    if isinstance(value, (bool, np.bool_)):
+        return int(value)
 
-    pca_cols = pca_columns()
-    missing = [c for c in pca_cols if c not in df.columns]
+    if isinstance(
+        value,
+        (
+            int,
+            float,
+            np.integer,
+            np.floating,
+        ),
+    ):
+        if value in (0, 1):
+            return int(value)
+
+    value_str = str(value).strip().lower()
+
+    if value_str in {"0", "false"}:
+        return 0
+
+    if value_str in {"1", "true"}:
+        return 1
+
+    raise ValueError(
+        f"Unexpected buggy value: {value!r}"
+    )
+
+
+# ============================================================
+# EMBEDDING PARSER
+# ============================================================
+
+def parse_embedding(value):
+    """
+    Parse one 384-D PCA embedding.
+
+    The PCA output is stored in the existing `embedding`
+    column as a serialized list.
+    """
+
+    if pd.isna(value):
+        raise ValueError(
+            "Encountered missing embedding."
+        )
+
+    # Already a Python list/array
+    if isinstance(
+        value,
+        (list, tuple, np.ndarray),
+    ):
+        embedding = list(value)
+
+    # Serialized embedding
+    elif isinstance(value, str):
+
+        value = value.strip()
+
+        try:
+            embedding = ast.literal_eval(value)
+
+        except Exception:
+
+            try:
+                embedding = json.loads(value)
+
+            except Exception as exc:
+
+                raise ValueError(
+                    "Could not parse embedding."
+                ) from exc
+
+    else:
+
+        raise ValueError(
+            f"Unsupported embedding type: "
+            f"{type(value)}"
+        )
+
+    embedding = np.asarray(
+        embedding,
+        dtype=np.float32,
+    )
+
+    if embedding.ndim != 1:
+
+        raise ValueError(
+            f"Expected 1-D embedding, "
+            f"got shape {embedding.shape}"
+        )
+
+    if len(embedding) != EMBEDDING_DIMENSION:
+
+        raise ValueError(
+            f"Expected {EMBEDDING_DIMENSION}-D embedding, "
+            f"got {len(embedding)} dimensions."
+        )
+
+    if not np.isfinite(embedding).all():
+
+        raise ValueError(
+            "Embedding contains NaN or infinite values."
+        )
+
+    return embedding
+
+
+# ============================================================
+# LOAD PCA SPLIT
+# ============================================================
+
+def load_pca_split(
+    path: Path,
+    split_name: str,
+):
+    """
+    Load one PCA-transformed split.
+
+    Returns:
+        df
+        X = 384-D PCA matrix
+        y = binary target
+    """
+
+    print(f"\nLoading {split_name}:")
+    print(f"  {path}")
+
+    if not path.exists():
+
+        raise FileNotFoundError(
+            f"Missing PCA split: {path}"
+        )
+
+    df = pd.read_csv(
+        path,
+        low_memory=False,
+    )
+
+    print(
+        f"  Rows: {len(df):,}"
+    )
+
+    print(
+        f"  Columns: {len(df.columns)}"
+    )
+
+    # --------------------------------------------------------
+    # Required columns
+    # --------------------------------------------------------
+
+    required = (
+        BOOKKEEPING_COLUMNS
+        + [
+            TARGET,
+            EMBEDDING_COLUMN,
+        ]
+    )
+
+    missing = [
+        column
+        for column in required
+        if column not in df.columns
+    ]
+
     if missing:
-        # Attempt to expand stored `embedding` object into pca columns
-        if "embedding" in df.columns:
-            logger.info("No pca_ columns found — expanding 'embedding' into %d columns", len(pca_cols))
-            # parse embedding strings if necessary
-            def _parse_emb(x):
-                if pd.isna(x):
-                    return [0.0] * len(pca_cols)
-                if isinstance(x, str):
-                    try:
-                        return ast.literal_eval(x)
-                    except Exception:
-                        try:
-                            return json.loads(x)
-                        except Exception:
-                            raise ValueError("Could not parse embedding string")
-                if isinstance(x, (list, tuple, np.ndarray)):
-                    return list(x)
-                raise ValueError("Unknown embedding format")
 
-            emb_series = df["embedding"].apply(_parse_emb)
-            emb_matrix = np.vstack(emb_series.values)
-            if emb_matrix.shape[1] != len(pca_cols):
-                raise ValueError(f"Embedding dimension {emb_matrix.shape[1]} does not match expected {len(pca_cols)}")
-            emb_df = pd.DataFrame(emb_matrix, columns=pca_cols, index=df.index)
-            df = pd.concat([df.drop(columns=["embedding"]), emb_df], axis=1)
-            missing = [c for c in pca_cols if c not in df.columns]
-            if missing:
-                logger.error("After expansion still missing columns: %s", missing[:10])
-                raise KeyError(f"Missing PCA columns after expansion: {missing}")
-            logger.info("Expanded embedding into pca columns successfully")
-        else:
-            logger.error("Missing PCA columns: %s", missing[:10])
-            raise KeyError(f"Missing PCA columns: {missing}")
+        raise ValueError(
+            f"{split_name} is missing required "
+            f"columns: {missing}"
+        )
 
-    # Keep only PCA features + id, timestamp, target for bookkeeping
-    keep_cols = ["commit_id", "author_date", "project", "buggy"] + pca_cols
-    df_reduced = df[keep_cols].copy()
-    df_reduced = df_reduced.sort_values("author_date")
+    # --------------------------------------------------------
+    # Target
+    # --------------------------------------------------------
 
-    X_train, X_test, y_train, y_test = temporal_train_test_split(
-        df_reduced,
-        timestamp_column="author_date",
-        target_column="buggy",
-        feature_columns=pca_cols,
-        train_size=0.8,
+    df[TARGET] = df[TARGET].apply(
+        normalize_buggy
     )
 
-    METRICS_DIR.mkdir(parents=True, exist_ok=True)
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    PRED_DIR.mkdir(parents=True, exist_ok=True)
-    PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+    if df[TARGET].isna().any():
 
-    # Random Forest
-    rf_model_path = MODELS_DIR / "random_forest_codebert.joblib"
-    logger.info("Training Random Forest")
-    rf_model, rf_pred, rf_score = train_random_forest(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        model_path=rf_model_path,
-        n_estimators=100,
-        random_state=42,
-        class_weight="balanced",
+        count = int(
+            df[TARGET].isna().sum()
+        )
+
+        raise ValueError(
+            f"{split_name} contains "
+            f"{count} missing buggy labels."
+        )
+
+    df[TARGET] = df[TARGET].astype(int)
+
+    # --------------------------------------------------------
+    # Duplicate IDs
+    # --------------------------------------------------------
+
+    duplicate_ids = int(
+        df["commit_id"].duplicated().sum()
     )
-    rf_score = ensure_prob_array(rf_score)
-    rf_metrics = compute_classification_metrics(y_test, rf_pred, rf_score, pos_label=1)
-    save_json(METRICS_DIR / "random_forest_metrics.json", rf_metrics)
 
-    rf_pred_df = pd.DataFrame({
-        "commit_id": df_reduced.iloc[X_test.index]["commit_id"].values if hasattr(X_test, "index") else df_reduced["commit_id"].iloc[-len(rf_pred):].values,
-        "author_date": df_reduced.iloc[X_test.index]["author_date"].values if hasattr(X_test, "index") else None,
-        "y_true": y_test,
-        "y_pred": rf_pred,
-        "y_score": rf_score,
-    })
-    rf_pred_df.to_csv(PRED_DIR / "random_forest_predictions.csv", index=False)
-    plot_roc_pr(y_test, rf_score, PLOTS_DIR / "random_forest")
+    if duplicate_ids > 0:
 
-    logger.info("Random Forest metrics: %s", {k: rf_metrics[k] for k in ("accuracy", "precision", "recall", "f1", "roc_auc")})
+        raise ValueError(
+            f"{split_name} contains "
+            f"{duplicate_ids} duplicate commit IDs."
+        )
 
-    # XGBoost
-    xgb_model_path = MODELS_DIR / "xgboost_codebert.joblib"
-    logger.info("Training XGBoost")
-    xgb_model, xgb_pred, xgb_score = train_xgboost(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        model_path=xgb_model_path,
-        n_estimators=100,
-        learning_rate=0.1,
-        random_state=42,
+    # --------------------------------------------------------
+    # Parse embeddings
+    # --------------------------------------------------------
+
+    print(
+        f"  Parsing {EMBEDDING_DIMENSION}-D "
+        f"PCA embeddings..."
     )
-    xgb_score = ensure_prob_array(xgb_score)
-    xgb_metrics = compute_classification_metrics(y_test, xgb_pred, xgb_score, pos_label=1)
-    save_json(METRICS_DIR / "xgboost_metrics.json", xgb_metrics)
 
-    xgb_pred_df = pd.DataFrame({
-        "commit_id": df_reduced.iloc[X_test.index]["commit_id"].values if hasattr(X_test, "index") else df_reduced["commit_id"].iloc[-len(xgb_pred):].values,
-        "author_date": df_reduced.iloc[X_test.index]["author_date"].values if hasattr(X_test, "index") else None,
-        "y_true": y_test,
-        "y_pred": xgb_pred,
-        "y_score": xgb_score,
-    })
-    xgb_pred_df.to_csv(PRED_DIR / "xgboost_predictions.csv", index=False)
-    plot_roc_pr(y_test, xgb_score, PLOTS_DIR / "xgboost")
+    embeddings = []
 
-    logger.info("XGBoost metrics: %s", {k: xgb_metrics[k] for k in ("accuracy", "precision", "recall", "f1", "roc_auc")})
+    for index, value in enumerate(
+        df[EMBEDDING_COLUMN]
+    ):
 
-    # Save combined summary
-    summary = {"random_forest": rf_metrics, "xgboost": xgb_metrics}
-    save_json(METRICS_DIR / "summary.json", summary)
+        try:
 
-    logger.info("Experiment 2 complete. Results saved to %s", OUTPUT_DIR)
+            embedding = parse_embedding(
+                value
+            )
 
+            embeddings.append(
+                embedding
+            )
+
+        except Exception as exc:
+
+            raise ValueError(
+                f"Invalid embedding in "
+                f"{split_name} at row {index}: "
+                f"{exc}"
+            ) from exc
+
+    X = np.vstack(
+        embeddings
+    ).astype(np.float32)
+
+    y = df[TARGET].to_numpy(
+        dtype=np.int32
+    )
+
+    print(
+        f"  Feature matrix: "
+        f"{X.shape[0]:,} × {X.shape[1]}"
+    )
+
+    if X.shape[1] != EMBEDDING_DIMENSION:
+
+        raise ValueError(
+            f"Expected {EMBEDDING_DIMENSION} "
+            f"features, got {X.shape[1]}"
+        )
+
+    return df, X, y
+
+
+# ============================================================
+# VERIFY SPLITS
+# ============================================================
+
+def verify_splits(
+    train_df,
+    validation_df,
+    test_df,
+):
+    print("\n" + "=" * 70)
+    print("SPLIT VERIFICATION")
+    print("=" * 70)
+
+    print(
+        f"Train:       {len(train_df):,}"
+    )
+
+    print(
+        f"Validation:  {len(validation_df):,}"
+    )
+
+    print(
+        f"Test:        {len(test_df):,}"
+    )
+
+    total = (
+        len(train_df)
+        + len(validation_df)
+        + len(test_df)
+    )
+
+    print(
+        f"Total:       {total:,}"
+    )
+
+    if total != 59996:
+
+        raise ValueError(
+            f"Expected 59,996 rows, "
+            f"found {total:,}."
+        )
+
+    train_ids = set(
+        train_df["commit_id"]
+    )
+
+    validation_ids = set(
+        validation_df["commit_id"]
+    )
+
+    test_ids = set(
+        test_df["commit_id"]
+    )
+
+    if train_ids & validation_ids:
+
+        raise ValueError(
+            "Train/validation commit overlap detected."
+        )
+
+    if train_ids & test_ids:
+
+        raise ValueError(
+            "Train/test commit overlap detected."
+        )
+
+    if validation_ids & test_ids:
+
+        raise ValueError(
+            "Validation/test commit overlap detected."
+        )
+
+    print(
+        "Commit ID overlap: NONE"
+    )
+
+
+# ============================================================
+# TARGET DISTRIBUTION
+# ============================================================
+
+def print_target_distribution(
+    train_df,
+    validation_df,
+    test_df,
+):
+    print("\n" + "=" * 70)
+    print("TARGET DISTRIBUTION")
+    print("=" * 70)
+
+    for name, df in [
+        ("Train", train_df),
+        ("Validation", validation_df),
+        ("Test", test_df),
+    ]:
+
+        buggy_count = int(
+            df[TARGET].sum()
+        )
+
+        total = len(df)
+
+        percentage = (
+            buggy_count / total * 100
+        )
+
+        print(
+            f"{name:12s}: "
+            f"buggy={buggy_count:,} / "
+            f"{total:,} "
+            f"({percentage:.2f}%)"
+        )
+
+
+# ============================================================
+# METRICS
+# ============================================================
+
+def calculate_metrics(
+    y_true,
+    y_pred,
+    y_probability,
+):
+
+    return {
+        "accuracy": float(
+            accuracy_score(
+                y_true,
+                y_pred,
+            )
+        ),
+
+        "precision": float(
+            precision_score(
+                y_true,
+                y_pred,
+                zero_division=0,
+            )
+        ),
+
+        "recall": float(
+            recall_score(
+                y_true,
+                y_pred,
+                zero_division=0,
+            )
+        ),
+
+        "f1": float(
+            f1_score(
+                y_true,
+                y_pred,
+                zero_division=0,
+            )
+        ),
+
+        "mcc": float(
+            matthews_corrcoef(
+                y_true,
+                y_pred,
+            )
+        ),
+
+        "roc_auc": float(
+            roc_auc_score(
+                y_true,
+                y_probability,
+            )
+        ),
+
+        "pr_auc": float(
+            average_precision_score(
+                y_true,
+                y_probability,
+            )
+        ),
+    }
+
+
+# ============================================================
+# EVALUATION
+# ============================================================
+
+def evaluate_model(
+    model,
+    X,
+    y,
+    split_name,
+):
+
+    probability = model.predict_proba(
+        X
+    )[:, 1]
+
+    prediction = (
+        probability >= 0.5
+    ).astype(int)
+
+    metrics = calculate_metrics(
+        y,
+        prediction,
+        probability,
+    )
+
+    cm = confusion_matrix(
+        y,
+        prediction,
+    )
+
+    print(
+        "\n" + "=" * 70
+    )
+
+    print(
+        f"{split_name.upper()} RESULTS"
+    )
+
+    print(
+        "=" * 70
+    )
+
+    for metric, value in metrics.items():
+
+        print(
+            f"{metric.upper():12s}: "
+            f"{value:.4f}"
+        )
+
+    print("\nConfusion Matrix:")
+
+    print(cm)
+
+    return (
+        metrics,
+        prediction,
+        probability,
+        cm,
+    )
+
+
+# ============================================================
+# SAVE JSON
+# ============================================================
+
+def save_json(
+    path: Path,
+    data,
+):
+
+    with open(
+        path,
+        "w",
+        encoding="utf-8",
+    ) as file:
+
+        json.dump(
+            data,
+            file,
+            indent=4,
+        )
+
+
+# ============================================================
+# SAVE PREDICTIONS
+# ============================================================
+
+def save_predictions(
+    df,
+    predictions,
+    probabilities,
+    model_name,
+    split_name,
+):
+
+    output = df[
+        [
+            "commit_id",
+            "project",
+            "author_date",
+            TARGET,
+        ]
+    ].copy()
+
+    output["prediction"] = predictions
+
+    output["probability"] = probabilities
+
+    output_path = (
+        PRED_DIR
+        / f"{model_name}_{split_name}_predictions.csv"
+    )
+
+    output.to_csv(
+        output_path,
+        index=False,
+    )
+
+    return output_path
+
+
+# ============================================================
+# SAVE CONFUSION MATRIX
+# ============================================================
+
+def save_confusion_matrix(
+    cm,
+    model_name,
+    split_name,
+):
+
+    cm_df = pd.DataFrame(
+        cm,
+        index=[
+            "Actual_0",
+            "Actual_1",
+        ],
+        columns=[
+            "Predicted_0",
+            "Predicted_1",
+        ],
+    )
+
+    path = (
+        METRICS_DIR
+        / f"{model_name}_{split_name}_confusion_matrix.csv"
+    )
+
+    cm_df.to_csv(path)
+
+    return path
+
+
+# ============================================================
+# ROC + PR PLOTS
+# ============================================================
+
+def plot_roc_pr(
+    y_true,
+    probability,
+    model_name,
+    split_name,
+):
+
+    # --------------------------------------------------------
+    # ROC
+    # --------------------------------------------------------
+
+    fpr, tpr, _ = roc_curve(
+        y_true,
+        probability,
+    )
+
+    roc_auc = auc(
+        fpr,
+        tpr,
+    )
+
+    plt.figure(
+        figsize=(7, 6)
+    )
+
+    plt.plot(
+        fpr,
+        tpr,
+        label=f"AUC = {roc_auc:.4f}",
+    )
+
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+    )
+
+    plt.xlabel(
+        "False Positive Rate"
+    )
+
+    plt.ylabel(
+        "True Positive Rate"
+    )
+
+    plt.title(
+        f"ROC Curve - "
+        f"{model_name} - "
+        f"{split_name}"
+    )
+
+    plt.legend(
+        loc="lower right"
+    )
+
+    plt.tight_layout()
+
+    roc_path = (
+        PLOTS_DIR
+        / f"{model_name}_{split_name}_roc.png"
+    )
+
+    plt.savefig(
+        roc_path,
+        dpi=150,
+    )
+
+    plt.close()
+
+    # --------------------------------------------------------
+    # Precision-Recall
+    # --------------------------------------------------------
+
+    precision, recall, _ = (
+        precision_recall_curve(
+            y_true,
+            probability,
+        )
+    )
+
+    pr_auc = auc(
+        recall,
+        precision,
+    )
+
+    plt.figure(
+        figsize=(7, 6)
+    )
+
+    plt.plot(
+        recall,
+        precision,
+        label=f"AUC = {pr_auc:.4f}",
+    )
+
+    plt.xlabel(
+        "Recall"
+    )
+
+    plt.ylabel(
+        "Precision"
+    )
+
+    plt.title(
+        f"Precision-Recall Curve - "
+        f"{model_name} - "
+        f"{split_name}"
+    )
+
+    plt.legend(
+        loc="lower left"
+    )
+
+    plt.tight_layout()
+
+    pr_path = (
+        PLOTS_DIR
+        / f"{model_name}_{split_name}_pr.png"
+    )
+
+    plt.savefig(
+        pr_path,
+        dpi=150,
+    )
+
+    plt.close()
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main():
+
+    print("\n" + "=" * 70)
+    print("EXPERIMENT 2: CODEBERT-ONLY BASELINE")
+    print("=" * 70)
+
+    print("\nMethodology:")
+
+    print(
+        "  Split: Project-wise chronological 70/15/15"
+    )
+
+    print(
+        "  Features: 384-D PCA-reduced CodeBERT"
+    )
+
+    print(
+        "  PCA: Fitted on TRAIN ONLY"
+    )
+
+    print(
+        "  Embedding dimension: 384"
+    )
+
+    print(
+        "  JIT features: NOT USED"
+    )
+
+    print(
+        "  Resampling: NOT USED"
+    )
+
+    print(
+        "  Random train/test split: NOT USED"
+    )
+
+    print(
+        "  Test set: Used only for final evaluation"
+    )
+
+    print("=" * 70)
+
+
+    # ========================================================
+    # 1. LOAD SPLITS
+    # ========================================================
+
+    train_df, X_train, y_train = (
+        load_pca_split(
+            TRAIN_PATH,
+            "train",
+        )
+    )
+
+    validation_df, X_validation, y_validation = (
+        load_pca_split(
+            VALIDATION_PATH,
+            "validation",
+        )
+    )
+
+    test_df, X_test, y_test = (
+        load_pca_split(
+            TEST_PATH,
+            "test",
+        )
+    )
+
+
+    # ========================================================
+    # 2. VERIFY SPLITS
+    # ========================================================
+
+    verify_splits(
+        train_df,
+        validation_df,
+        test_df,
+    )
+
+
+    # ========================================================
+    # 3. TARGET DISTRIBUTION
+    # ========================================================
+
+    print_target_distribution(
+        train_df,
+        validation_df,
+        test_df,
+    )
+
+
+    # ========================================================
+    # 4. CLASS IMBALANCE
+    # ========================================================
+
+    negative_count = np.sum(
+        y_train == 0
+    )
+
+    positive_count = np.sum(
+        y_train == 1
+    )
+
+    if positive_count == 0:
+
+        raise ValueError(
+            "Training set contains no positive examples."
+        )
+
+    scale_pos_weight = (
+        negative_count
+        / positive_count
+    )
+
+    print("\n" + "=" * 70)
+    print("MODEL CONFIGURATION")
+    print("=" * 70)
+
+    print(
+        f"XGBoost scale_pos_weight: "
+        f"{scale_pos_weight:.4f}"
+    )
+
+
+    # ========================================================
+    # 5. DEFINE MODELS
+    # ========================================================
+
+    models = {
+
+        "random_forest":
+            RandomForestClassifier(
+                n_estimators=300,
+                max_depth=None,
+                min_samples_split=2,
+                min_samples_leaf=1,
+                max_features="sqrt",
+                class_weight="balanced",
+                random_state=42,
+                n_jobs=-1,
+            ),
+
+        "xgboost":
+            XGBClassifier(
+                n_estimators=300,
+                max_depth=6,
+                learning_rate=0.05,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                objective="binary:logistic",
+                eval_metric="logloss",
+                scale_pos_weight=scale_pos_weight,
+                random_state=42,
+                n_jobs=-1,
+            ),
+    }
+
+
+    # ========================================================
+    # 6. TRAIN + EVALUATE
+    # ========================================================
+
+    all_results = []
+
+
+    for model_name, model in models.items():
+
+        print(
+            "\n\n" + "#" * 70
+        )
+
+        print(
+            f"TRAINING: "
+            f"{model_name.upper()}"
+        )
+
+        print(
+            "#" * 70
+        )
+
+
+        # ----------------------------------------------------
+        # TRAIN
+        # ----------------------------------------------------
+
+        model.fit(
+            X_train,
+            y_train,
+        )
+
+        print(
+            "Training completed."
+        )
+
+
+        # ----------------------------------------------------
+        # VALIDATION
+        # ----------------------------------------------------
+
+        (
+            validation_metrics,
+            validation_predictions,
+            validation_probabilities,
+            validation_cm,
+        ) = evaluate_model(
+            model,
+            X_validation,
+            y_validation,
+            "validation",
+        )
+
+        save_predictions(
+            validation_df,
+            validation_predictions,
+            validation_probabilities,
+            model_name,
+            "validation",
+        )
+
+        save_confusion_matrix(
+            validation_cm,
+            model_name,
+            "validation",
+        )
+
+        plot_roc_pr(
+            y_validation,
+            validation_probabilities,
+            model_name,
+            "validation",
+        )
+
+
+        # ----------------------------------------------------
+        # TEST
+        # ----------------------------------------------------
+
+        (
+            test_metrics,
+            test_predictions,
+            test_probabilities,
+            test_cm,
+        ) = evaluate_model(
+            model,
+            X_test,
+            y_test,
+            "test",
+        )
+
+        save_predictions(
+            test_df,
+            test_predictions,
+            test_probabilities,
+            model_name,
+            "test",
+        )
+
+        save_confusion_matrix(
+            test_cm,
+            model_name,
+            "test",
+        )
+
+        plot_roc_pr(
+            y_test,
+            test_probabilities,
+            model_name,
+            "test",
+        )
+
+
+        # ----------------------------------------------------
+        # SAVE MODEL
+        # ----------------------------------------------------
+
+        model_path = (
+            MODELS_DIR
+            / f"{model_name}_codebert.joblib"
+        )
+
+        joblib.dump(
+            model,
+            model_path,
+        )
+
+        print(
+            f"\nModel saved: "
+            f"{model_path}"
+        )
+
+
+        # ----------------------------------------------------
+        # STORE RESULTS
+        # ----------------------------------------------------
+
+        all_results.append(
+            {
+                "model": model_name,
+
+                "validation_accuracy":
+                    validation_metrics["accuracy"],
+
+                "validation_precision":
+                    validation_metrics["precision"],
+
+                "validation_recall":
+                    validation_metrics["recall"],
+
+                "validation_f1":
+                    validation_metrics["f1"],
+
+                "validation_mcc":
+                    validation_metrics["mcc"],
+
+                "validation_roc_auc":
+                    validation_metrics["roc_auc"],
+
+                "validation_pr_auc":
+                    validation_metrics["pr_auc"],
+
+                "test_accuracy":
+                    test_metrics["accuracy"],
+
+                "test_precision":
+                    test_metrics["precision"],
+
+                "test_recall":
+                    test_metrics["recall"],
+
+                "test_f1":
+                    test_metrics["f1"],
+
+                "test_mcc":
+                    test_metrics["mcc"],
+
+                "test_roc_auc":
+                    test_metrics["roc_auc"],
+
+                "test_pr_auc":
+                    test_metrics["pr_auc"],
+            }
+        )
+
+
+    # ========================================================
+    # 7. SAVE RESULTS
+    # ========================================================
+
+    results_df = pd.DataFrame(
+        all_results
+    )
+
+    results_path = (
+        METRICS_DIR
+        / "experiment_2_results.csv"
+    )
+
+    results_df.to_csv(
+        results_path,
+        index=False,
+    )
+
+
+    # ========================================================
+    # 8. SAVE JSON SUMMARY
+    # ========================================================
+
+    summary = {
+        row["model"]: {
+            key: value
+            for key, value in row.items()
+            if key != "model"
+        }
+        for row in all_results
+    }
+
+    save_json(
+        METRICS_DIR / "summary.json",
+        summary,
+    )
+
+
+    # ========================================================
+    # 9. SAVE CONFIGURATION
+    # ========================================================
+
+    configuration = {
+
+        "experiment":
+            "Experiment 2 - CodeBERT Only",
+
+        "split_method":
+            "Project-wise chronological 70/15/15",
+
+        "train_rows":
+            int(len(train_df)),
+
+        "validation_rows":
+            int(len(validation_df)),
+
+        "test_rows":
+            int(len(test_df)),
+
+        "feature_type":
+            "PCA-reduced CodeBERT embedding",
+
+        "original_embedding_dimension":
+            768,
+
+        "pca_dimension":
+            384,
+
+        "embedding_storage":
+            "embedding column",
+
+        "pca_fitted_on":
+            "training split only",
+
+        "jit_features_used":
+            False,
+
+        "resampling_used":
+            False,
+
+        "random_split_used":
+            False,
+
+        "threshold":
+            0.5,
+
+        "random_state":
+            42,
+
+        "xgboost_scale_pos_weight":
+            float(scale_pos_weight),
+
+        "models": [
+            "Random Forest",
+            "XGBoost",
+        ],
+    }
+
+    save_json(
+        OUTPUT_DIR
+        / "experiment_2_configuration.json",
+        configuration,
+    )
+
+
+    # ========================================================
+    # 10. FINAL SUMMARY
+    # ========================================================
+
+    print(
+        "\n\n" + "=" * 70
+    )
+
+    print(
+        "EXPERIMENT 2 COMPLETED"
+    )
+
+    print(
+        "=" * 70
+    )
+
+    print(
+        "\nFinal TEST performance:"
+    )
+
+    display_columns = [
+        "model",
+        "test_accuracy",
+        "test_precision",
+        "test_recall",
+        "test_f1",
+        "test_mcc",
+        "test_roc_auc",
+        "test_pr_auc",
+    ]
+
+    print(
+        results_df[
+            display_columns
+        ].to_string(index=False)
+    )
+
+    print(
+        "\nResults saved to:"
+    )
+
+    print(
+        f"  {results_path}"
+    )
+
+    print(
+        "\nOutput directory:"
+    )
+
+    print(
+        f"  {OUTPUT_DIR}"
+    )
+
+    print(
+        "\n" + "=" * 70
+    )
+
+
+# ============================================================
+# ENTRY POINT
+# ============================================================
 
 if __name__ == "__main__":
     main()
