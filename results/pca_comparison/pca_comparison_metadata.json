@@ -1,0 +1,53 @@
+{
+  "source": "results\\chronological_splits\\train.csv",
+  "source_split": "train",
+  "validation_used": false,
+  "test_used": false,
+  "sample_rows": 41998,
+  "input_dimensions": 768,
+  "components": [
+    256,
+    384,
+    512,
+    768
+  ],
+  "random_state": 42,
+  "results": [
+    {
+      "n_components": 256,
+      "explained_variance_ratio": 0.9834340810775757,
+      "explained_variance_percent": 98.34340810775757,
+      "reconstruction_mse": 0.00011350977001711726,
+      "fit_seconds": 4.90980750000017,
+      "compression_ratio": 3.0,
+      "status": "ok"
+    },
+    {
+      "n_components": 384,
+      "explained_variance_ratio": 0.9942802786827087,
+      "explained_variance_percent": 99.42802786827087,
+      "reconstruction_mse": 3.919231676263735e-05,
+      "fit_seconds": 7.989571100000376,
+      "compression_ratio": 2.0,
+      "status": "ok"
+    },
+    {
+      "n_components": 512,
+      "explained_variance_ratio": 0.9979779124259949,
+      "explained_variance_percent": 99.79779124259949,
+      "reconstruction_mse": 1.3858558304491453e-05,
+      "fit_seconds": 9.494638699999996,
+      "compression_ratio": 1.5,
+      "status": "ok"
+    },
+    {
+      "n_components": 768,
+      "explained_variance_ratio": 0.9999997019767761,
+      "explained_variance_percent": 99.99997019767761,
+      "reconstruction_mse": 1.7737313354193596e-12,
+      "fit_seconds": 17.6330367999999,
+      "compression_ratio": 1.0,
+      "status": "ok"
+    }
+  ]
+}

@@ -1,45 +1,77 @@
-"""Experiment 1: JIT features only pipeline.
-
-This script loads the multilanguage commit dataset, cleans and subsamples it,
-performs a temporal train/test split, trains Random Forest and XGBoost models,
-and saves metrics, predictions, and visualizations.
 """
-from __future__ import annotations
+Experiment 1: Traditional JIT-Only Baseline
+=============================================
 
-import json
-import logging
-import sys
+Purpose:
+    Establish a baseline using only traditional JIT/process metrics.
+
+Dataset:
+    Project-wise chronological 70/15/15 split.
+
+Features:
+    12 traditional JIT features.
+
+Models:
+    1. Random Forest
+    2. XGBoost
+
+Important:
+    - No random train/test split
+    - No stratified sampling
+    - No resampling
+    - No CodeBERT embeddings
+    - No PCA
+    - Test set is used only for final evaluation
+"""
+
 from pathlib import Path
-from typing import Dict, List
+import json
+import warnings
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
-
-import matplotlib.pyplot as plt
+import joblib
+import numpy as np
 import pandas as pd
-from sklearn.metrics import precision_recall_curve, roc_curve
 
-from preprocessing.clean_data import clean_commits_df
-from preprocessing.load_data import load_commits_csv
-from preprocessing.sampling import create_stratified_subset
-from preprocessing.temporal_split import temporal_train_test_split
-from models.train_random_forest import train_random_forest
-from models.train_xgboost import train_xgboost
-from utils.metrics import compute_classification_metrics
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    matthews_corrcoef,
+    roc_auc_score,
+    average_precision_score,
+    confusion_matrix,
+)
+
+from xgboost import XGBClassifier
+
+warnings.filterwarnings("ignore")
 
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
-logger = logging.getLogger(__name__)
+# ============================================================
+# PATHS
+# ============================================================
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DATA_PATH = PROJECT_ROOT / "final_multilanguage_dataset.csv"
-EXPERIMENT_DIR = PROJECT_ROOT / "results" / "experiment_1"
-METRICS_DIR = EXPERIMENT_DIR / "metrics"
-PREDICTIONS_DIR = EXPERIMENT_DIR / "predictions"
-PLOTS_DIR = EXPERIMENT_DIR / "plots"
-MODELS_DIR = EXPERIMENT_DIR / "models"
 
-JIT_FEATURES: List[str] = [
+SPLIT_DIR = PROJECT_ROOT / "results" / "chronological_splits"
+
+OUTPUT_DIR = PROJECT_ROOT / "results" / "experiment_1_jit_only"
+
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+TRAIN_PATH = SPLIT_DIR / "train.csv"
+VALIDATION_PATH = SPLIT_DIR / "validation.csv"
+TEST_PATH = SPLIT_DIR / "test.csv"
+
+
+# ============================================================
+# JIT FEATURES
+# ============================================================
+
+JIT_FEATURES = [
     "la",
     "ld",
     "nf",
@@ -54,223 +86,797 @@ JIT_FEATURES: List[str] = [
     "asexp",
 ]
 
-
-def ensure_directories() -> None:
-    for path in [METRICS_DIR, PREDICTIONS_DIR, PLOTS_DIR, MODELS_DIR]:
-        path.mkdir(parents=True, exist_ok=True)
+TARGET = "buggy"
 
 
-def save_json(data: Dict[str, object], path: Path) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-    logger.info("Saved JSON to %s", path)
+# ============================================================
+# UTILITY FUNCTIONS
+# ============================================================
+
+def load_split(path, split_name):
+    """Load and validate one chronological split."""
+
+    print(f"\nLoading {split_name}:")
+    print(f"  {path}")
+
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Missing split file: {path}"
+        )
+
+    df = pd.read_csv(path)
+
+    print(f"  Rows: {len(df):,}")
+    print(f"  Columns: {len(df.columns)}")
+
+    # --------------------------------------------------------
+    # Required columns
+    # --------------------------------------------------------
+
+    required = JIT_FEATURES + [TARGET, "commit_id", "project"]
+
+    missing = [c for c in required if c not in df.columns]
+
+    if missing:
+        raise ValueError(
+            f"{split_name} is missing required columns: {missing}"
+        )
+
+    # --------------------------------------------------------
+    # Target normalization
+    # --------------------------------------------------------
+
+    def normalize_buggy(value):
+        """
+        Convert all expected buggy-label representations
+        into integer 0/1.
+        """
+
+        if pd.isna(value):
+            return np.nan
+
+        # Actual boolean values
+        if isinstance(value, (bool, np.bool_)):
+            return int(value)
+
+        # Numeric values
+        if isinstance(value, (int, float, np.integer, np.floating)):
+            if value in (0, 1):
+                return int(value)
+
+        # String representations
+        value_str = str(value).strip().lower()
+
+        if value_str in {"0", "false"}:
+            return 0
+
+        if value_str in {"1", "true"}:
+            return 1
+
+        raise ValueError(
+            f"Unexpected buggy value: {value!r}"
+        )
 
 
-def save_feature_importance_csv(model: object, feature_names: List[str], path: Path) -> None:
-    if not hasattr(model, "feature_importances_"):
-        logger.warning("Model %s does not have feature_importances_", model.__class__.__name__)
-        return
+    df[TARGET] = df[TARGET].apply(normalize_buggy)
 
-    importance_df = pd.DataFrame(
-        {"feature": feature_names, "importance": model.feature_importances_}
-    ).sort_values(by="importance", ascending=False)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    importance_df.to_csv(path, index=False)
-    logger.info("Saved feature importance CSV to %s", path)
+    # Check for missing labels
+    if df[TARGET].isna().any():
+        missing_labels = int(df[TARGET].isna().sum())
 
+        raise ValueError(
+            f"{split_name} contains "
+            f"{missing_labels} missing buggy labels."
+        )
 
-def plot_roc_pr(
-    y_true: pd.Series,
-    scores: Dict[str, pd.Series],
-    output_path: Path,
-) -> None:
-    plt.figure(figsize=(12, 5))
+    df[TARGET] = df[TARGET].astype(int)
 
-    plt.subplot(1, 2, 1)
-    for label, y_score in scores.items():
-        fpr, tpr, _ = roc_curve(y_true, y_score)
-        plt.plot(fpr, tpr, label=label)
-    plt.plot([0, 1], [0, 1], color="black", linestyle="--", linewidth=1)
-    plt.title("ROC Curve")
-    plt.xlabel("False Positive Rate")
-    plt.ylabel("True Positive Rate")
-    plt.legend()
-    plt.grid(True)
+    # Final validation
+    unique_targets = set(df[TARGET].unique())
 
-    plt.subplot(1, 2, 2)
-    for label, y_score in scores.items():
-        precision, recall, _ = precision_recall_curve(y_true, y_score)
-        plt.plot(recall, precision, label=label)
-    plt.title("Precision-Recall Curve")
-    plt.xlabel("Recall")
-    plt.ylabel("Precision")
-    plt.legend()
-    plt.grid(True)
+    if not unique_targets.issubset({0, 1}):
+        raise ValueError(
+            f"Unexpected normalized target values in "
+            f"{split_name}: {unique_targets}"
+        )
 
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    logger.info("Saved ROC/PR plot to %s", output_path)
+    # --------------------------------------------------------
+    # Feature conversion
+    # --------------------------------------------------------
 
+    for feature in JIT_FEATURES:
+        df[feature] = pd.to_numeric(
+            df[feature],
+            errors="coerce"
+        )
 
-def plot_feature_importance(
-    model: object,
-    feature_names: List[str],
-    output_path: Path,
-    title: str,
-) -> None:
-    if not hasattr(model, "feature_importances_"):
-        logger.warning("Model %s does not have feature_importances_", model.__class__.__name__)
-        return
-
-    importances = model.feature_importances_
-    importance_df = pd.DataFrame({"feature": feature_names, "importance": importances})
-    importance_df = importance_df.sort_values(by="importance", ascending=False)
-
-    plt.figure(figsize=(8, 6))
-    plt.barh(importance_df["feature"], importance_df["importance"])
-    plt.gca().invert_yaxis()
-    plt.title(title)
-    plt.xlabel("Importance")
-    plt.tight_layout()
-    plt.savefig(output_path, dpi=200)
-    plt.close()
-    logger.info("Saved feature importance plot to %s", output_path)
-
-
-def main() -> None:
-    ensure_directories()
-
-    logger.info("Loading dataset from %s", DATA_PATH)
-    df = load_commits_csv(DATA_PATH)
-
-    logger.info("Cleaning dataset")
-    df_clean, clean_report = clean_commits_df(df, jit_feature_columns=JIT_FEATURES, target_column="buggy")
-    logger.info("Cleaning report: %s", clean_report)
-
-    logger.info("Creating stratified subset for years 2018-2026")
-    df_sampled = create_stratified_subset(df_clean)
-    logger.info("Sampled dataset size: %d", len(df_sampled))
-
-    logger.info("Performing temporal train/test split")
-    X_train, X_test, y_train, y_test = temporal_train_test_split(
-        df_sampled,
-        timestamp_column="author_date",
-        target_column="buggy",
-        feature_columns=JIT_FEATURES,
-        train_size=0.8,
+    # Replace infinite values
+    df[JIT_FEATURES] = df[JIT_FEATURES].replace(
+        [np.inf, -np.inf],
+        np.nan
     )
 
-    # Ensure y values are numeric 0/1 for metric functions and XGBoost
-    y_train = y_train.astype(int)
-    y_test = y_test.astype(int)
+    # --------------------------------------------------------
+    # Missing value handling
+    # --------------------------------------------------------
 
-    scale_pos_weight = 1.0
-    if y_train.sum() > 0:
-        scale_pos_weight = float((len(y_train) - y_train.sum()) / y_train.sum())
-    logger.info("Computed scale_pos_weight=%s from training label distribution", scale_pos_weight)
+    missing_counts = df[JIT_FEATURES].isna().sum()
 
-    rf_model_path = MODELS_DIR / "experiment_1_rf.joblib"
-    xgb_model_path = MODELS_DIR / "experiment_1_xgb.joblib"
+    total_missing = missing_counts.sum()
 
-    rf_model, rf_pred, rf_score = train_random_forest(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        model_path=rf_model_path,
+    if total_missing > 0:
+        print(
+            f"  Missing JIT values: {total_missing:,}"
+        )
+        print(
+            "  Filling missing values with training-derived "
+            "medians later."
+        )
+
+    # --------------------------------------------------------
+    # Duplicate IDs
+    # --------------------------------------------------------
+
+    duplicate_ids = df["commit_id"].duplicated().sum()
+
+    if duplicate_ids > 0:
+        raise ValueError(
+            f"{split_name} contains {duplicate_ids} "
+            f"duplicate commit IDs."
+        )
+
+    return df
+
+
+def calculate_metrics(y_true, y_pred, y_prob):
+    """Calculate classification metrics."""
+
+    metrics = {
+        "accuracy": accuracy_score(y_true, y_pred),
+        "precision": precision_score(
+            y_true,
+            y_pred,
+            zero_division=0
+        ),
+        "recall": recall_score(
+            y_true,
+            y_pred,
+            zero_division=0
+        ),
+        "f1": f1_score(
+            y_true,
+            y_pred,
+            zero_division=0
+        ),
+        "mcc": matthews_corrcoef(
+            y_true,
+            y_pred
+        ),
+        "roc_auc": roc_auc_score(
+            y_true,
+            y_prob
+        ),
+        "pr_auc": average_precision_score(
+            y_true,
+            y_prob
+        ),
+    }
+
+    return metrics
+
+
+def evaluate_model(model, X, y, split_name):
+    """Evaluate a model on one split."""
+
+    probabilities = model.predict_proba(X)[:, 1]
+
+    predictions = (
+        probabilities >= 0.5
+    ).astype(int)
+
+    metrics = calculate_metrics(
+        y,
+        predictions,
+        probabilities
     )
 
-    xgb_model, xgb_pred, xgb_score = train_xgboost(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
-        model_path=xgb_model_path,
+    cm = confusion_matrix(
+        y,
+        predictions
+    )
+
+    print(f"\n{'=' * 70}")
+    print(f"{split_name.upper()} RESULTS")
+    print(f"{'=' * 70}")
+
+    for name, value in metrics.items():
+        print(
+            f"{name.upper():12s}: {value:.4f}"
+        )
+
+    print("\nConfusion Matrix:")
+    print(cm)
+
+    return metrics, predictions, probabilities, cm
+
+
+def save_predictions(
+    df,
+    predictions,
+    probabilities,
+    model_name,
+    split_name
+):
+    """Save predictions for later analysis."""
+
+    output = df[
+        [
+            "commit_id",
+            "project",
+            "author_date",
+            TARGET,
+        ]
+    ].copy()
+
+    output["prediction"] = predictions
+    output["probability"] = probabilities
+
+    output_path = (
+        OUTPUT_DIR
+        / f"{model_name}_{split_name}_predictions.csv"
+    )
+
+    output.to_csv(
+        output_path,
+        index=False
+    )
+
+    return output_path
+
+
+def save_confusion_matrix(cm, model_name, split_name):
+    """Save confusion matrix."""
+
+    cm_df = pd.DataFrame(
+        cm,
+        index=["Actual_0", "Actual_1"],
+        columns=["Predicted_0", "Predicted_1"]
+    )
+
+    path = (
+        OUTPUT_DIR
+        / f"{model_name}_{split_name}_confusion_matrix.csv"
+    )
+
+    cm_df.to_csv(path)
+
+    return path
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main():
+
+    print("\n" + "=" * 70)
+    print("EXPERIMENT 1: JIT-ONLY BASELINE")
+    print("=" * 70)
+
+    print("\nMethodology:")
+    print("  Split: Project-wise chronological 70/15/15")
+    print("  Features: 12 traditional JIT metrics")
+    print("  Embeddings: NOT USED")
+    print("  PCA: NOT USED")
+    print("  Resampling: NOT USED")
+    print("  Random train/test split: NOT USED")
+    print("=" * 70)
+
+
+    # ========================================================
+    # 1. LOAD DATA
+    # ========================================================
+
+    train_df = load_split(
+        TRAIN_PATH,
+        "train"
+    )
+
+    validation_df = load_split(
+        VALIDATION_PATH,
+        "validation"
+    )
+
+    test_df = load_split(
+        TEST_PATH,
+        "test"
+    )
+
+
+    # ========================================================
+    # 2. VERIFY SPLIT SIZES
+    # ========================================================
+
+    print("\n" + "=" * 70)
+    print("SPLIT VERIFICATION")
+    print("=" * 70)
+
+    print(
+        f"Train:       {len(train_df):,}"
+    )
+
+    print(
+        f"Validation:  {len(validation_df):,}"
+    )
+
+    print(
+        f"Test:        {len(test_df):,}"
+    )
+
+    total_rows = (
+        len(train_df)
+        + len(validation_df)
+        + len(test_df)
+    )
+
+    print(
+        f"Total:       {total_rows:,}"
+    )
+
+    if total_rows != 59996:
+        print(
+            f"\nWARNING: Expected 59,996 rows, "
+            f"found {total_rows:,}."
+        )
+
+
+    # ========================================================
+    # 3. VERIFY NO ID OVERLAP
+    # ========================================================
+
+    train_ids = set(train_df["commit_id"])
+    validation_ids = set(validation_df["commit_id"])
+    test_ids = set(test_df["commit_id"])
+
+    overlap_train_val = train_ids & validation_ids
+    overlap_train_test = train_ids & test_ids
+    overlap_val_test = validation_ids & test_ids
+
+    if (
+        overlap_train_val
+        or overlap_train_test
+        or overlap_val_test
+    ):
+        raise ValueError(
+            "Commit ID overlap detected between splits!"
+        )
+
+    print(
+        "\nCommit ID overlap: NONE"
+    )
+
+
+    # ========================================================
+    # 4. PREPARE FEATURES
+    # ========================================================
+
+    X_train = train_df[JIT_FEATURES].copy()
+    X_validation = validation_df[JIT_FEATURES].copy()
+    X_test = test_df[JIT_FEATURES].copy()
+
+    y_train = train_df[TARGET].values
+    y_validation = validation_df[TARGET].values
+    y_test = test_df[TARGET].values
+
+
+    # ========================================================
+    # 5. TRAINING-ONLY MEDIAN IMPUTATION
+    # ========================================================
+    #
+    # IMPORTANT:
+    # Medians are calculated ONLY from training data.
+    # Validation/test are transformed using those medians.
+    #
+    # This avoids data leakage.
+    # ========================================================
+
+    train_medians = X_train.median()
+
+    X_train = X_train.fillna(train_medians)
+    X_validation = X_validation.fillna(train_medians)
+    X_test = X_test.fillna(train_medians)
+
+    # Any column completely missing in train would still
+    # contain NaN. Fail explicitly rather than silently
+    # introducing leakage.
+    if (
+        X_train.isna().any().any()
+        or X_validation.isna().any().any()
+        or X_test.isna().any().any()
+    ):
+        raise ValueError(
+            "NaN values remain after training-derived "
+            "median imputation."
+        )
+
+
+    # ========================================================
+    # 6. PRINT TARGET DISTRIBUTION
+    # ========================================================
+
+    print("\n" + "=" * 70)
+    print("TARGET DISTRIBUTION")
+    print("=" * 70)
+
+    for name, y in [
+        ("Train", y_train),
+        ("Validation", y_validation),
+        ("Test", y_test),
+    ]:
+
+        buggy_count = int(y.sum())
+        total = len(y)
+        percentage = 100 * buggy_count / total
+
+        print(
+            f"{name:12s}: "
+            f"buggy={buggy_count:,} / "
+            f"{total:,} "
+            f"({percentage:.2f}%)"
+        )
+
+
+    # ========================================================
+    # 7. MODEL DEFINITIONS
+    # ========================================================
+
+    models = {}
+
+
+    # --------------------------------------------------------
+    # Random Forest
+    # --------------------------------------------------------
+
+    models["random_forest"] = RandomForestClassifier(
+        n_estimators=300,
+        max_depth=None,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        max_features="sqrt",
+        class_weight="balanced",
+        random_state=42,
+        n_jobs=-1,
+    )
+
+
+    # --------------------------------------------------------
+    # XGBoost
+    # --------------------------------------------------------
+
+    # Calculate class imbalance ONLY from training set.
+    negative_count = np.sum(y_train == 0)
+    positive_count = np.sum(y_train == 1)
+
+    scale_pos_weight = (
+        negative_count / positive_count
+        if positive_count > 0
+        else 1.0
+    )
+
+    print("\n" + "=" * 70)
+    print("MODEL CONFIGURATION")
+    print("=" * 70)
+
+    print(
+        f"XGBoost scale_pos_weight: "
+        f"{scale_pos_weight:.4f}"
+    )
+
+    models["xgboost"] = XGBClassifier(
+        n_estimators=300,
+        max_depth=6,
+        learning_rate=0.05,
+        subsample=0.8,
+        colsample_bytree=0.8,
+        objective="binary:logistic",
+        eval_metric="logloss",
         scale_pos_weight=scale_pos_weight,
+        random_state=42,
+        n_jobs=-1,
     )
 
-    logger.info("Evaluating Random Forest model")
-    rf_metrics = compute_classification_metrics(y_test, rf_pred, rf_score)
-    logger.info("Evaluating XGBoost model")
-    xgb_metrics = compute_classification_metrics(y_test, xgb_pred, xgb_score)
 
-    metrics_path = METRICS_DIR / "random_forest_metrics.json"
-    save_json(rf_metrics, metrics_path)
-    metrics_path = METRICS_DIR / "xgboost_metrics.json"
-    save_json(xgb_metrics, metrics_path)
+    # ========================================================
+    # 8. TRAIN + EVALUATE
+    # ========================================================
 
-    split_report = {
-        "n_rows": len(df_sampled),
-        "train_rows": len(X_train),
-        "test_rows": len(X_test),
-        "train_ratio": 0.8,
-        "test_ratio": 0.2,
-        "train_buggy_distribution": y_train.value_counts().sort_index().to_dict(),
-        "test_buggy_distribution": y_test.value_counts().sort_index().to_dict(),
+    all_results = []
+
+    for model_name, model in models.items():
+
+        print("\n\n" + "#" * 70)
+        print(
+            f"TRAINING: {model_name.upper()}"
+        )
+        print("#" * 70)
+
+        # ----------------------------------------------------
+        # Train
+        # ----------------------------------------------------
+
+        model.fit(
+            X_train,
+            y_train
+        )
+
+        print(
+            "Training completed."
+        )
+
+
+        # ----------------------------------------------------
+        # Validation
+        # ----------------------------------------------------
+
+        val_metrics, val_predictions, val_probabilities, val_cm = (
+            evaluate_model(
+                model,
+                X_validation,
+                y_validation,
+                "validation"
+            )
+        )
+
+        val_prediction_path = save_predictions(
+            validation_df,
+            val_predictions,
+            val_probabilities,
+            model_name,
+            "validation"
+        )
+
+        save_confusion_matrix(
+            val_cm,
+            model_name,
+            "validation"
+        )
+
+
+        # ----------------------------------------------------
+        # Final Test
+        # ----------------------------------------------------
+
+        test_metrics, test_predictions, test_probabilities, test_cm = (
+            evaluate_model(
+                model,
+                X_test,
+                y_test,
+                "test"
+            )
+        )
+
+        test_prediction_path = save_predictions(
+            test_df,
+            test_predictions,
+            test_probabilities,
+            model_name,
+            "test"
+        )
+
+        save_confusion_matrix(
+            test_cm,
+            model_name,
+            "test"
+        )
+
+
+        # ----------------------------------------------------
+        # Store results
+        # ----------------------------------------------------
+
+        result = {
+            "model": model_name,
+
+            "validation_accuracy":
+                val_metrics["accuracy"],
+
+            "validation_precision":
+                val_metrics["precision"],
+
+            "validation_recall":
+                val_metrics["recall"],
+
+            "validation_f1":
+                val_metrics["f1"],
+
+            "validation_mcc":
+                val_metrics["mcc"],
+
+            "validation_roc_auc":
+                val_metrics["roc_auc"],
+
+            "validation_pr_auc":
+                val_metrics["pr_auc"],
+
+            "test_accuracy":
+                test_metrics["accuracy"],
+
+            "test_precision":
+                test_metrics["precision"],
+
+            "test_recall":
+                test_metrics["recall"],
+
+            "test_f1":
+                test_metrics["f1"],
+
+            "test_mcc":
+                test_metrics["mcc"],
+
+            "test_roc_auc":
+                test_metrics["roc_auc"],
+
+            "test_pr_auc":
+                test_metrics["pr_auc"],
+        }
+
+        all_results.append(result)
+
+
+        # ----------------------------------------------------
+        # Save model
+        # ----------------------------------------------------
+
+        model_path = (
+            OUTPUT_DIR
+            / f"{model_name}.joblib"
+        )
+
+        joblib.dump(
+            model,
+            model_path
+        )
+
+        print(
+            f"\nModel saved: {model_path}"
+        )
+
+        print(
+            f"Validation predictions: "
+            f"{val_prediction_path}"
+        )
+
+        print(
+            f"Test predictions: "
+            f"{test_prediction_path}"
+        )
+
+
+    # ========================================================
+    # 9. SAVE RESULTS
+    # ========================================================
+
+    results_df = pd.DataFrame(
+        all_results
+    )
+
+    results_path = (
+        OUTPUT_DIR
+        / "experiment_1_results.csv"
+    )
+
+    results_df.to_csv(
+        results_path,
+        index=False
+    )
+
+
+    # ========================================================
+    # 10. SAVE CONFIGURATION
+    # ========================================================
+
+    configuration = {
+        "experiment": "Experiment 1 - JIT Only",
+
+        "split_method":
+            "Project-wise chronological 70/15/15",
+
+        "train_rows":
+            int(len(train_df)),
+
+        "validation_rows":
+            int(len(validation_df)),
+
+        "test_rows":
+            int(len(test_df)),
+
+        "features":
+            JIT_FEATURES,
+
+        "target":
+            TARGET,
+
+        "embeddings_used":
+            False,
+
+        "pca_used":
+            False,
+
+        "resampling_used":
+            False,
+
+        "random_split_used":
+            False,
+
+        "threshold":
+            0.5,
+
+        "random_state":
+            42,
+
+        "xgboost_scale_pos_weight":
+            float(scale_pos_weight),
+
+        "models": [
+            "Random Forest",
+            "XGBoost"
+        ],
     }
-    save_json(split_report, METRICS_DIR / "split_report.json")
 
-    save_json(clean_report, METRICS_DIR / "cleaning_report.json")
-
-    combined_summary = {
-        "experiment": "experiment_1_jit_only",
-        "dataset_rows": len(df_sampled),
-        "train_rows": len(X_train),
-        "test_rows": len(X_test),
-        "features": JIT_FEATURES,
-        "scale_pos_weight": scale_pos_weight,
-        "models": {
-            "random_forest": rf_metrics,
-            "xgboost": xgb_metrics,
-        },
-    }
-    save_json(combined_summary, METRICS_DIR / "summary.json")
-
-    predictions_meta = df_sampled.loc[X_test.index, ["commit_id", "project", "author_date"]].copy()
-    predictions_df = predictions_meta.assign(
-        buggy_true=y_test.values,
-        rf_pred=rf_pred.values,
-        rf_score=rf_score.values,
-        xgb_pred=xgb_pred.values,
-        xgb_score=xgb_score.values,
-    )
-    predictions_path = PREDICTIONS_DIR / "experiment_1_jit_only_predictions.csv"
-    predictions_df.to_csv(predictions_path, index=False)
-    logger.info("Saved predictions to %s", predictions_path)
-
-    save_feature_importance_csv(
-        rf_model,
-        JIT_FEATURES,
-        METRICS_DIR / "experiment_1_rf_feature_importance.csv",
-    )
-    save_feature_importance_csv(
-        xgb_model,
-        JIT_FEATURES,
-        METRICS_DIR / "experiment_1_xgb_feature_importance.csv",
+    config_path = (
+        OUTPUT_DIR
+        / "experiment_1_configuration.json"
     )
 
-    plot_roc_pr(
-        y_test,
-        {"Random Forest": rf_score, "XGBoost": xgb_score},
-        PLOTS_DIR / "experiment_1_jit_only_roc_pr.png",
+    with open(
+        config_path,
+        "w",
+        encoding="utf-8"
+    ) as f:
+        json.dump(
+            configuration,
+            f,
+            indent=4
+        )
+
+
+    # ========================================================
+    # 11. FINAL SUMMARY
+    # ========================================================
+
+    print("\n\n" + "=" * 70)
+    print("EXPERIMENT 1 COMPLETED")
+    print("=" * 70)
+
+    print("\nFinal TEST performance:")
+
+    display_columns = [
+        "model",
+        "test_accuracy",
+        "test_precision",
+        "test_recall",
+        "test_f1",
+        "test_mcc",
+        "test_roc_auc",
+        "test_pr_auc",
+    ]
+
+    print(
+        results_df[display_columns]
+        .to_string(index=False)
     )
 
-    plot_feature_importance(
-        rf_model,
-        JIT_FEATURES,
-        PLOTS_DIR / "experiment_1_jit_only_rf_feature_importance.png",
-        title="Random Forest Feature Importance",
-    )
-    plot_feature_importance(
-        xgb_model,
-        JIT_FEATURES,
-        PLOTS_DIR / "experiment_1_jit_only_xgb_feature_importance.png",
-        title="XGBoost Feature Importance",
+    print("\nResults saved to:")
+    print(
+        f"  {results_path}"
     )
 
-    logger.info("Experiment 1 completed successfully")
+    print("\nOutput directory:")
+    print(
+        f"  {OUTPUT_DIR}"
+    )
+
+    print("\n" + "=" * 70)
 
 
 if __name__ == "__main__":

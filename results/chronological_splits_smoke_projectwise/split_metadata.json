@@ -1,0 +1,154 @@
+{
+  "total_rows": 32,
+  "duplicate_commit_ids_found": 0,
+  "duplicate_commit_rows_found": 0,
+  "duplicate_policy": "error",
+  "date_parsing": {
+    "representations": {
+      "unix_s": 32
+    },
+    "sanity_lower_bound": "2000-01-01T00:00:00+00:00",
+    "sanity_upper_bound": "2027-09-10T00:00:00+00:00"
+  },
+  "project_split_policy": "Each project sorted by parsed author_date then _source_row_id; oldest 70% train, next 15% validation, latest 15% test.",
+  "small_project_policy": "For projects with fewer than three rows, allocate the closest deterministic chronological partition possible without duplication; projects with at least three rows receive nonempty three-way partitions.",
+  "equal_timestamp_policy": "Use _source_row_id for deterministic ties; if a boundary falls inside an equal-timestamp group, move it to the nearest group edge when possible and record the adjustment.",
+  "projects": {
+    "apache/groovy": {
+      "total": 32,
+      "train": 22,
+      "validation": 5,
+      "test": 5,
+      "date_range": {
+        "min": "2003-09-11T14:54:46+00:00",
+        "max": "2003-12-30T16:27:54+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    }
+  },
+  "splits": {
+    "train": {
+      "rows": 22,
+      "percentage": 0.6875,
+      "date_range": {
+        "min": "2003-09-11T14:54:46+00:00",
+        "max": "2003-11-17T00:06:41+00:00"
+      },
+      "language": {
+        "java": 22
+      },
+      "buggy": {
+        "0": 21,
+        "1": 1
+      },
+      "language_buggy": {
+        "java|buggy=0": 21,
+        "java|buggy=1": 1
+      },
+      "project": {
+        "apache/groovy": 22
+      }
+    },
+    "validation": {
+      "rows": 5,
+      "percentage": 0.15625,
+      "date_range": {
+        "min": "2003-11-24T20:09:32+00:00",
+        "max": "2003-12-09T14:19:29+00:00"
+      },
+      "language": {
+        "java": 5
+      },
+      "buggy": {
+        "0": 5
+      },
+      "language_buggy": {
+        "java|buggy=0": 5
+      },
+      "project": {
+        "apache/groovy": 5
+      }
+    },
+    "test": {
+      "rows": 5,
+      "percentage": 0.15625,
+      "date_range": {
+        "min": "2003-12-13T15:00:16+00:00",
+        "max": "2003-12-30T16:27:54+00:00"
+      },
+      "language": {
+        "java": 5
+      },
+      "buggy": {
+        "0": 4,
+        "1": 1
+      },
+      "language_buggy": {
+        "java|buggy=0": 4,
+        "java|buggy=1": 1
+      },
+      "project": {
+        "apache/groovy": 5
+      }
+    }
+  },
+  "embeddings_copied_without_transformation": true,
+  "pca_performed": false,
+  "distributions": {
+    "train": {
+      "rows": 22,
+      "language": {
+        "java": 22
+      },
+      "buggy": {
+        "0": 21,
+        "1": 1
+      },
+      "language_buggy": {
+        "java|buggy=0": 21,
+        "java|buggy=1": 1
+      },
+      "project": {
+        "apache/groovy": 22
+      }
+    },
+    "validation": {
+      "rows": 5,
+      "language": {
+        "java": 5
+      },
+      "buggy": {
+        "0": 5
+      },
+      "language_buggy": {
+        "java|buggy=0": 5
+      },
+      "project": {
+        "apache/groovy": 5
+      }
+    },
+    "test": {
+      "rows": 5,
+      "language": {
+        "java": 5
+      },
+      "buggy": {
+        "0": 4,
+        "1": 1
+      },
+      "language_buggy": {
+        "java|buggy=0": 4,
+        "java|buggy=1": 1
+      },
+      "project": {
+        "apache/groovy": 5
+      }
+    }
+  },
+  "second_pass_row_counts": {
+    "train": 22,
+    "validation": 5,
+    "test": 5
+  }
+}

@@ -1,0 +1,520 @@
+{
+  "total_rows": 59996,
+  "duplicate_commit_ids_found": 0,
+  "duplicate_commit_rows_found": 0,
+  "duplicate_policy": "error",
+  "date_parsing": {
+    "representations": {
+      "legacy_epoch_string_as_seconds": 36000,
+      "unix_s": 18491,
+      "datetime_string": 5505
+    },
+    "sanity_lower_bound": "1980-01-01T00:00:00+00:00",
+    "sanity_upper_bound": "2027-09-11T00:00:00+00:00"
+  },
+  "project_split_policy": "Each project sorted by parsed author_date then _source_row_id; oldest 70% train, next 15% validation, latest 15% test.",
+  "small_project_policy": "Projects with at least three rows receive nonempty three-way partitions. Projects with fewer than three rows are assigned deterministically to the earliest possible partitions without duplication and are explicitly flagged.",
+  "equal_timestamp_policy": "Use _source_row_id for deterministic ties; if a boundary falls inside an equal-timestamp group, move it to the nearest group edge when possible and record the adjustment.",
+  "projects": {
+    "apache/activemq": {
+      "total": 460,
+      "train": 322,
+      "validation": 69,
+      "test": 69,
+      "date_range": {
+        "min": "2016-05-16T15:24:50+00:00",
+        "max": "2019-12-11T14:05:50+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/camel": {
+      "total": 7521,
+      "train": 5265,
+      "validation": 1128,
+      "test": 1128,
+      "date_range": {
+        "min": "2016-05-17T04:00:33+00:00",
+        "max": "2019-12-26T11:31:48+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/cassandra": {
+      "total": 891,
+      "train": 624,
+      "validation": 133,
+      "test": 134,
+      "date_range": {
+        "min": "2016-05-17T09:22:21+00:00",
+        "max": "2019-12-09T15:32:35+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/flink": {
+      "total": 6109,
+      "train": 4276,
+      "validation": 917,
+      "test": 916,
+      "date_range": {
+        "min": "2016-05-16T22:18:42+00:00",
+        "max": "2019-12-26T07:37:50+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/groovy": {
+      "total": 1486,
+      "train": 1040,
+      "validation": 223,
+      "test": 223,
+      "date_range": {
+        "min": "2016-05-17T11:06:50+00:00",
+        "max": "2019-12-25T10:49:51+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/hadoop": {
+      "total": 6333,
+      "train": 4433,
+      "validation": 950,
+      "test": 950,
+      "date_range": {
+        "min": "2016-05-16T15:40:23+00:00",
+        "max": "2019-12-25T05:37:25+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/hbase": {
+      "total": 2712,
+      "train": 1898,
+      "validation": 407,
+      "test": 407,
+      "date_range": {
+        "min": "2016-05-17T03:34:04+00:00",
+        "max": "2019-12-25T20:38:02+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/hive": {
+      "total": 2621,
+      "train": 1835,
+      "validation": 393,
+      "test": 393,
+      "date_range": {
+        "min": "2016-05-16T17:10:16+00:00",
+        "max": "2019-12-20T13:55:26+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/ignite": {
+      "total": 4279,
+      "train": 2995,
+      "validation": 642,
+      "test": 642,
+      "date_range": {
+        "min": "2016-05-16T12:23:09+00:00",
+        "max": "2019-12-26T12:17:11+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/kafka": {
+      "total": 1885,
+      "train": 1320,
+      "validation": 282,
+      "test": 283,
+      "date_range": {
+        "min": "2016-05-18T18:01:27+00:00",
+        "max": "2019-12-20T01:05:19+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/spark": {
+      "total": 668,
+      "train": 468,
+      "validation": 100,
+      "test": 100,
+      "date_range": {
+        "min": "2016-05-17T13:20:47+00:00",
+        "max": "2019-12-26T17:39:53+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/zeppelin": {
+      "total": 758,
+      "train": 531,
+      "validation": 113,
+      "test": 114,
+      "date_range": {
+        "min": "2016-05-16T16:56:24+00:00",
+        "max": "2019-12-20T14:52:21+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "apache/zookeeper": {
+      "total": 277,
+      "train": 194,
+      "validation": 41,
+      "test": 42,
+      "date_range": {
+        "min": "2016-06-01T22:59:24+00:00",
+        "max": "2019-12-03T18:12:30+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "cpp/godot": {
+      "total": 2313,
+      "train": 1619,
+      "validation": 347,
+      "test": 347,
+      "date_range": {
+        "min": "2022-10-01T20:12:28+00:00",
+        "max": "2026-09-03T16:14:44+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "cpp/krita": {
+      "total": 7073,
+      "train": 4951,
+      "validation": 1061,
+      "test": 1061,
+      "date_range": {
+        "min": "2021-07-14T03:56:05+00:00",
+        "max": "2026-09-04T12:25:31+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "cpp/opencv": {
+      "total": 2614,
+      "train": 1830,
+      "validation": 392,
+      "test": 392,
+      "date_range": {
+        "min": "2019-12-19T11:26:48+00:00",
+        "max": "2026-09-04T11:54:49+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "python/cpython": {
+      "total": 5505,
+      "train": 3853,
+      "validation": 826,
+      "test": 826,
+      "date_range": {
+        "min": "1990-10-13T19:23:40+00:00",
+        "max": "2000-10-06T21:10:34+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "python/django": {
+      "total": 5510,
+      "train": 3857,
+      "validation": 827,
+      "test": 826,
+      "date_range": {
+        "min": "2016-05-16T01:54:03+00:00",
+        "max": "2026-09-04T21:24:26+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    },
+    "python/flask": {
+      "total": 981,
+      "train": 687,
+      "validation": 147,
+      "test": 147,
+      "date_range": {
+        "min": "2016-01-02T18:56:02+00:00",
+        "max": "2026-08-16T18:35:31+00:00"
+      },
+      "boundary_equal_timestamp": false,
+      "small_project": false
+    }
+  },
+  "splits": {
+    "train": {
+      "rows": 41998,
+      "percentage": 0.7000133342222815,
+      "date_range": {
+        "min": "1990-10-13T19:23:40+00:00",
+        "max": "2026-06-07T13:45:13+00:00"
+      },
+      "language": {
+        "cpp": 8400,
+        "java": 25201,
+        "python": 8397
+      },
+      "buggy": {
+        "0": 30086,
+        "1": 11912
+      },
+      "language_buggy": {
+        "cpp|buggy=0": 5249,
+        "cpp|buggy=1": 3151,
+        "java|buggy=0": 19492,
+        "java|buggy=1": 5709,
+        "python|buggy=0": 5345,
+        "python|buggy=1": 3052
+      },
+      "project": {
+        "apache/activemq": 322,
+        "apache/camel": 5265,
+        "apache/cassandra": 624,
+        "apache/flink": 4276,
+        "apache/groovy": 1040,
+        "apache/hadoop": 4433,
+        "apache/hbase": 1898,
+        "apache/hive": 1835,
+        "apache/ignite": 2995,
+        "apache/kafka": 1320,
+        "apache/spark": 468,
+        "apache/zeppelin": 531,
+        "apache/zookeeper": 194,
+        "cpp/godot": 1619,
+        "cpp/krita": 4951,
+        "cpp/opencv": 1830,
+        "python/cpython": 3853,
+        "python/django": 3857,
+        "python/flask": 687
+      }
+    },
+    "validation": {
+      "rows": 8998,
+      "percentage": 0.1499766651110074,
+      "date_range": {
+        "min": "1999-09-29T12:50:13+00:00",
+        "max": "2026-07-17T14:28:40+00:00"
+      },
+      "language": {
+        "cpp": 1800,
+        "java": 5398,
+        "python": 1800
+      },
+      "buggy": {
+        "0": 6916,
+        "1": 2082
+      },
+      "language_buggy": {
+        "cpp|buggy=0": 1310,
+        "cpp|buggy=1": 490,
+        "java|buggy=0": 4456,
+        "java|buggy=1": 942,
+        "python|buggy=0": 1150,
+        "python|buggy=1": 650
+      },
+      "project": {
+        "apache/activemq": 69,
+        "apache/camel": 1128,
+        "apache/cassandra": 133,
+        "apache/flink": 917,
+        "apache/groovy": 223,
+        "apache/hadoop": 950,
+        "apache/hbase": 407,
+        "apache/hive": 393,
+        "apache/ignite": 642,
+        "apache/kafka": 282,
+        "apache/spark": 100,
+        "apache/zeppelin": 113,
+        "apache/zookeeper": 41,
+        "cpp/godot": 347,
+        "cpp/krita": 1061,
+        "cpp/opencv": 392,
+        "python/cpython": 826,
+        "python/django": 827,
+        "python/flask": 147
+      }
+    },
+    "test": {
+      "rows": 9000,
+      "percentage": 0.1500100006667111,
+      "date_range": {
+        "min": "2000-06-18T15:45:55+00:00",
+        "max": "2026-09-04T21:24:26+00:00"
+      },
+      "language": {
+        "cpp": 1800,
+        "java": 5401,
+        "python": 1799
+      },
+      "buggy": {
+        "0": 7624,
+        "1": 1376
+      },
+      "language_buggy": {
+        "cpp|buggy=0": 1435,
+        "cpp|buggy=1": 365,
+        "java|buggy=0": 4828,
+        "java|buggy=1": 573,
+        "python|buggy=0": 1361,
+        "python|buggy=1": 438
+      },
+      "project": {
+        "apache/activemq": 69,
+        "apache/camel": 1128,
+        "apache/cassandra": 134,
+        "apache/flink": 916,
+        "apache/groovy": 223,
+        "apache/hadoop": 950,
+        "apache/hbase": 407,
+        "apache/hive": 393,
+        "apache/ignite": 642,
+        "apache/kafka": 283,
+        "apache/spark": 100,
+        "apache/zeppelin": 114,
+        "apache/zookeeper": 42,
+        "cpp/godot": 347,
+        "cpp/krita": 1061,
+        "cpp/opencv": 392,
+        "python/cpython": 826,
+        "python/django": 826,
+        "python/flask": 147
+      }
+    }
+  },
+  "embeddings_copied_without_transformation": true,
+  "pca_performed": false,
+  "distributions": {
+    "train": {
+      "rows": 41998,
+      "language": {
+        "cpp": 8400,
+        "java": 25201,
+        "python": 8397
+      },
+      "buggy": {
+        "0": 30086,
+        "1": 11912
+      },
+      "language_buggy": {
+        "cpp|buggy=0": 5249,
+        "cpp|buggy=1": 3151,
+        "java|buggy=0": 19492,
+        "java|buggy=1": 5709,
+        "python|buggy=0": 5345,
+        "python|buggy=1": 3052
+      },
+      "project": {
+        "apache/activemq": 322,
+        "apache/camel": 5265,
+        "apache/cassandra": 624,
+        "apache/flink": 4276,
+        "apache/groovy": 1040,
+        "apache/hadoop": 4433,
+        "apache/hbase": 1898,
+        "apache/hive": 1835,
+        "apache/ignite": 2995,
+        "apache/kafka": 1320,
+        "apache/spark": 468,
+        "apache/zeppelin": 531,
+        "apache/zookeeper": 194,
+        "cpp/godot": 1619,
+        "cpp/krita": 4951,
+        "cpp/opencv": 1830,
+        "python/cpython": 3853,
+        "python/django": 3857,
+        "python/flask": 687
+      }
+    },
+    "validation": {
+      "rows": 8998,
+      "language": {
+        "cpp": 1800,
+        "java": 5398,
+        "python": 1800
+      },
+      "buggy": {
+        "0": 6916,
+        "1": 2082
+      },
+      "language_buggy": {
+        "cpp|buggy=0": 1310,
+        "cpp|buggy=1": 490,
+        "java|buggy=0": 4456,
+        "java|buggy=1": 942,
+        "python|buggy=0": 1150,
+        "python|buggy=1": 650
+      },
+      "project": {
+        "apache/activemq": 69,
+        "apache/camel": 1128,
+        "apache/cassandra": 133,
+        "apache/flink": 917,
+        "apache/groovy": 223,
+        "apache/hadoop": 950,
+        "apache/hbase": 407,
+        "apache/hive": 393,
+        "apache/ignite": 642,
+        "apache/kafka": 282,
+        "apache/spark": 100,
+        "apache/zeppelin": 113,
+        "apache/zookeeper": 41,
+        "cpp/godot": 347,
+        "cpp/krita": 1061,
+        "cpp/opencv": 392,
+        "python/cpython": 826,
+        "python/django": 827,
+        "python/flask": 147
+      }
+    },
+    "test": {
+      "rows": 9000,
+      "language": {
+        "cpp": 1800,
+        "java": 5401,
+        "python": 1799
+      },
+      "buggy": {
+        "0": 7624,
+        "1": 1376
+      },
+      "language_buggy": {
+        "cpp|buggy=0": 1435,
+        "cpp|buggy=1": 365,
+        "java|buggy=0": 4828,
+        "java|buggy=1": 573,
+        "python|buggy=0": 1361,
+        "python|buggy=1": 438
+      },
+      "project": {
+        "apache/activemq": 69,
+        "apache/camel": 1128,
+        "apache/cassandra": 134,
+        "apache/flink": 916,
+        "apache/groovy": 223,
+        "apache/hadoop": 950,
+        "apache/hbase": 407,
+        "apache/hive": 393,
+        "apache/ignite": 642,
+        "apache/kafka": 283,
+        "apache/spark": 100,
+        "apache/zeppelin": 114,
+        "apache/zookeeper": 42,
+        "cpp/godot": 347,
+        "cpp/krita": 1061,
+        "cpp/opencv": 392,
+        "python/cpython": 826,
+        "python/django": 826,
+        "python/flask": 147
+      }
+    }
+  },
+  "second_pass_row_counts": {
+    "train": 41998,
+    "validation": 8998,
+    "test": 9000
+  }
+}

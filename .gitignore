@@ -13,6 +13,10 @@ results/experiment_2/models/*
 results/data/java_only_frozen_sample_dataset.csv
 data/final_multilanguage_dataset_with_embeddings.csv
 data/java_only_final_multilanguage_dataset_with_embeddings_pca384.csv
+data/final_multilanguage_59996_pca384.csv
+data/final_multilanguage_dataset_with_embeddings_fix_test.csv
+data/*
+cpp_python_mining_code/cpython_python_history.pkl
 # Large cloned repositories
 cpp_python_mining_code/cpython/
 cpp_python_mining_code/godot/
@@ -21,3 +25,20 @@ cpp_python_mining_code/opencv/
 
 # Generated CSV files
 cpp_python_mining_code/*.csv
+
+# status files
+run_split.status
+smoke_projectwise.status
+
+# Large generated datasets
+results/chronological_splits/*.csv
+results/pca/*.csv
+
+# Trained model artifacts
+*.joblib
+
+# PCA generated artifacts
+*.npz
+
+# Generated embeddings
+*.npy
