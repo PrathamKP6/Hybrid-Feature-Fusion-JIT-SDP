@@ -1,4 +1,0 @@
-{
-  "model_type": "logistic_regression",
-  "trained_on": "stacking_meta_train"
-}

@@ -1,0 +1,43 @@
+{
+  "experiment": "final_experiment_1_jit_only",
+  "dataset_path": "data\\final_multilanguage_59996_pca384.csv",
+  "dataset_rows": 59996,
+  "features": [
+    "la",
+    "ld",
+    "nf",
+    "ns",
+    "nd",
+    "ent",
+    "ndev",
+    "age",
+    "nuc",
+    "aexp",
+    "arexp",
+    "asexp"
+  ],
+  "feature_count": 12,
+  "split_manifest": "results\\final_shared_split",
+  "train_only_jit_medians": {},
+  "scale_pos_weight": 3.3172223554809306,
+  "random_forest": {
+    "n_estimators": 100,
+    "class_weight": "balanced",
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "xgboost": {
+    "objective": "binary:logistic",
+    "n_estimators": 100,
+    "learning_rate": 0.1,
+    "eval_metric": "logloss",
+    "scale_pos_weight": 3.3172223554809306,
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "created_at_utc": "2026-09-06T17:15:57.950858+00:00",
+  "python": "3.10.11 (tags/v3.10.11:7d4cc5a, Apr  5 2023, 00:38:17) [MSC v.1929 64 bit (AMD64)]",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "sklearn": "1.7.2",
+  "xgboost_version": "3.2.0"
+}

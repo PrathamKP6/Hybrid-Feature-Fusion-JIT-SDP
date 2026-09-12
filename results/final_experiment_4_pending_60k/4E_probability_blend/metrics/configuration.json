@@ -1,0 +1,12 @@
+{
+  "variant": "4E_probability_blend",
+  "model": "probability_blend",
+  "features": [
+    "jit_base_probability",
+    "codebert_base_probability"
+  ],
+  "feature_count": 2,
+  "dataset_path": "data\\final_multilanguage_59996_pca384.csv",
+  "split_manifest": "results/final_shared_split",
+  "threshold": 0.42
+}

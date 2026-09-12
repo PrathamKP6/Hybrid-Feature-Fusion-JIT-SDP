@@ -1,0 +1,18 @@
+{
+  "threshold": 0.31,
+  "roc_auc": 0.7306652435155527,
+  "pr_auc": 0.5037234937184177,
+  "precision": 0.4514851485148515,
+  "recall": 0.8280155642023346,
+  "f1": 0.5843478260869566,
+  "mcc": 0.3339513457455049,
+  "accuracy": 0.6215517959829986,
+  "brier": 0.20045963853913717,
+  "tn": 4266,
+  "fp": 3878,
+  "fn": 663,
+  "tp": 3192,
+  "predicted_positive_count": 7070,
+  "predicted_positive_rate": 0.5892157679806651,
+  "threshold_selection": "validation F1"
+}

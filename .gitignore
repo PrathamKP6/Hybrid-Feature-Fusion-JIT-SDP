@@ -12,3 +12,6 @@ java_only_final_multilanguage_dataset_with_embeddings_pca384.csv
 java_only_frozen_sample_dataset.csv
 results/**/*.csv
 data/*.csv
+cpp_python_mining_code/data/llm_input_59996.csv
+cpp_python_mining_code/*.csv
+cpp_python_mining_code/dataset_inspection_output.txt
