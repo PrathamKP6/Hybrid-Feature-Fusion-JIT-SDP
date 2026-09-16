@@ -15,3 +15,4 @@ data/*.csv
 cpp_python_mining_code/data/llm_input_59996.csv
 cpp_python_mining_code/*.csv
 cpp_python_mining_code/dataset_inspection_output.txt
+results/exp3/models/experiment_3_random_forest.joblib
