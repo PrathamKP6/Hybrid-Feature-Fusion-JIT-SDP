@@ -42,3 +42,6 @@ results/pca/*.csv
 
 # Generated embeddings
 *.npy
+
+results/experiment_5_jit_llm/datasets/*.csv
+results/experiment_5_jit_llm/llm_preprocessed/*.csv
