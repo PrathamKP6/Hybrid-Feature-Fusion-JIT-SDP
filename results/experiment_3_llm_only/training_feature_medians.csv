@@ -1,0 +1,15 @@
+,median
+intent_confidence,60.061126947402954
+intent_margin,40.8575564622879
+change_confidence,66.87189936637878
+change_margin,44.783276319503784
+risk_confidence,78.7653237581253
+risk_margin,60.73887348175049
+complexity_confidence,90.7282918691635
+complexity_margin,81.89414739608765
+scope_confidence,95.05095481872559
+scope_margin,91.62364304065704
+test_confidence,71.07002139091492
+test_margin,52.5499701499939
+security_confidence,71.9367653131485
+security_margin,52.79393196105957
