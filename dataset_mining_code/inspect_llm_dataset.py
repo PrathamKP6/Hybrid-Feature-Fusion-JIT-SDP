@@ -40,11 +40,11 @@ import pandas as pd
 # CONFIGURATION
 # ============================================================
 
-DATA_DIR = Path("results/pca")
+DATA_DIR = Path("data/llm_experiment_preprocessed")
 
-TRAIN_FILE = DATA_DIR / "train_pca384.csv"
-VAL_FILE = DATA_DIR / "validation_pca384.csv"
-TEST_FILE = DATA_DIR / "test_pca384.csv"
+TRAIN_FILE = DATA_DIR / "train.csv"
+VAL_FILE = DATA_DIR / "validation.csv"
+TEST_FILE = DATA_DIR / "test.csv"
 
 
 # ============================================================
