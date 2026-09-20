@@ -56,7 +56,11 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     confusion_matrix,
+    roc_curve,
+    precision_recall_curve,
 )
+
+import matplotlib.pyplot as plt
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
@@ -140,9 +144,15 @@ PREDICTIONS_DIR = os.path.join(
     "predictions"
 )
 
+PLOTS_DIR = os.path.join(
+    OUTPUT_DIR,
+    "plots"
+)
+
 os.makedirs(METRICS_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 os.makedirs(PREDICTIONS_DIR, exist_ok=True)
+os.makedirs(PLOTS_DIR, exist_ok=True)
 
 
 # ============================================================
@@ -840,6 +850,141 @@ test_stacking_prediction = (
 
 
 # ============================================================
+# ROC AND PRECISION-RECALL PLOTS
+# ============================================================
+
+def plot_roc_pr(
+    y_true,
+    probabilities,
+    model_name,
+    split_name
+):
+    """
+    Save ROC and Precision-Recall curves.
+
+    For Experiment 4D, the requested final model plot is
+    generated from the final stacking probabilities.
+    """
+
+    # --------------------------------------------------------
+    # ROC CURVE
+    # --------------------------------------------------------
+
+    fpr, tpr, _ = roc_curve(
+        y_true,
+        probabilities
+    )
+
+    roc_auc = roc_auc_score(
+        y_true,
+        probabilities
+    )
+
+    plt.figure(figsize=(7, 6))
+
+    plt.plot(
+        fpr,
+        tpr,
+        linewidth=2,
+        label=(
+            f"{model_name} "
+            f"(ROC-AUC = {roc_auc:.4f})"
+        )
+    )
+
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        linewidth=1.5,
+        label="Random classifier"
+    )
+
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+
+    plt.title(
+        f"ROC Curve - {model_name} - "
+        f"{split_name.title()}"
+    )
+
+    plt.legend(loc="lower right")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    roc_path = os.path.join(
+        PLOTS_DIR,
+        f"{model_name.lower().replace(' ', '_').replace('—', '').replace('-', '')}_"
+        f"{split_name}_roc.png"
+    )
+
+    plt.savefig(
+        roc_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    # --------------------------------------------------------
+    # PRECISION-RECALL CURVE
+    # --------------------------------------------------------
+
+    precision, recall, _ = precision_recall_curve(
+        y_true,
+        probabilities
+    )
+
+    pr_auc = average_precision_score(
+        y_true,
+        probabilities
+    )
+
+    plt.figure(figsize=(7, 6))
+
+    plt.plot(
+        recall,
+        precision,
+        linewidth=2,
+        label=(
+            f"{model_name} "
+            f"(PR-AUC = {pr_auc:.4f})"
+        )
+    )
+
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+
+    plt.title(
+        f"Precision-Recall Curve - {model_name} - "
+        f"{split_name.title()}"
+    )
+
+    plt.legend(loc="lower left")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    pr_path = os.path.join(
+        PLOTS_DIR,
+        f"{model_name.lower().replace(' ', '_').replace('—', '').replace('-', '')}_"
+        f"{split_name}_pr.png"
+    )
+
+    plt.savefig(
+        pr_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    print(f"ROC curve saved: {roc_path}")
+    print(f"PR curve saved:  {pr_path}")
+
+    return roc_path, pr_path
+
+
+# ============================================================
 # EVALUATION FUNCTION
 # ============================================================
 
@@ -961,6 +1106,16 @@ stacking_results = evaluate_predictions(
     test_stacking_prediction,
     test_stacking_probability,
     "Stacking — Logistic Regression"
+)
+
+# Plot the FINAL STACKING MODEL probabilities.
+# These are the probabilities produced by the Logistic Regression
+# meta-model, not the individual base-model probabilities.
+plot_roc_pr(
+    y_test,
+    test_stacking_probability,
+    "Stacking_Logistic_Regression",
+    "test"
 )
 
 
@@ -1251,6 +1406,26 @@ print(
     ].to_string(
         index=False
     )
+)
+
+print(
+    "\nPlots saved to:"
+)
+
+print(
+    PLOTS_DIR
+)
+
+print(
+    "\nGenerated final stacking plots:"
+)
+
+print(
+    "  stacking_logistic_regression_test_roc.png"
+)
+
+print(
+    "  stacking_logistic_regression_test_pr.png"
 )
 
 print(

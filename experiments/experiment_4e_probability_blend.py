@@ -38,6 +38,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import joblib
+import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import (
@@ -49,6 +50,8 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     confusion_matrix,
+    roc_curve,
+    precision_recall_curve,
 )
 
 from xgboost import XGBClassifier
@@ -137,12 +140,18 @@ BLEND_DIR = os.path.join(
     "blend_analysis"
 )
 
+PLOTS_DIR = os.path.join(
+    OUTPUT_DIR,
+    "plots"
+)
+
 for directory in [
     OUTPUT_DIR,
     METRICS_DIR,
     MODELS_DIR,
     PREDICTIONS_DIR,
     BLEND_DIR,
+    PLOTS_DIR,
 ]:
     os.makedirs(
         directory,
@@ -945,6 +954,124 @@ alpha_xgb = float(
 
 
 # ============================================================
+# PLOTTING
+# ============================================================
+
+def plot_roc_pr(
+    y_true,
+    probabilities,
+    model_name,
+    split_name="test"
+):
+    """
+    Plot ROC and Precision-Recall curves for the FINAL
+    probability-blended model.
+
+    PR-AUC is reported using average_precision_score,
+    matching the experiment's evaluation metric.
+    """
+
+    safe_name = (
+        model_name
+        .lower()
+        .replace(" ", "_")
+        .replace("—", "")
+        .replace("-", "_")
+    )
+
+    # -------------------------
+    # ROC curve
+    # -------------------------
+    fpr, tpr, _ = roc_curve(
+        y_true,
+        probabilities
+    )
+
+    roc_auc = roc_auc_score(
+        y_true,
+        probabilities
+    )
+
+    plt.figure(figsize=(7, 6))
+
+    plt.plot(
+        fpr,
+        tpr,
+        label=f"ROC-AUC = {roc_auc:.4f}"
+    )
+
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        label="Random classifier"
+    )
+
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(
+        f"{model_name} — {split_name.upper()} ROC Curve"
+    )
+    plt.legend(loc="lower right")
+    plt.tight_layout()
+
+    roc_path = os.path.join(
+        PLOTS_DIR,
+        f"{safe_name}_{split_name}_roc.png"
+    )
+
+    plt.savefig(
+        roc_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+    plt.close()
+
+    # -------------------------
+    # Precision-Recall curve
+    # -------------------------
+    precision, recall, _ = precision_recall_curve(
+        y_true,
+        probabilities
+    )
+
+    pr_auc = average_precision_score(
+        y_true,
+        probabilities
+    )
+
+    plt.figure(figsize=(7, 6))
+
+    plt.plot(
+        recall,
+        precision,
+        label=f"PR-AUC = {pr_auc:.4f}"
+    )
+
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title(
+        f"{model_name} — {split_name.upper()} Precision-Recall Curve"
+    )
+    plt.legend(loc="lower left")
+    plt.tight_layout()
+
+    pr_path = os.path.join(
+        PLOTS_DIR,
+        f"{safe_name}_{split_name}_pr.png"
+    )
+
+    plt.savefig(
+        pr_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+    plt.close()
+
+    return roc_path, pr_path
+
+
+# ============================================================
 # TEST PROBABILITIES
 # ============================================================
 
@@ -1157,6 +1284,35 @@ xgb_results = evaluate(
     test_xgb_blended_probability,
     "XGBoost Probability Blend"
 )
+
+
+# ============================================================
+# FINAL TEST ROC / PR PLOTS
+# ============================================================
+
+print(
+    "\nGenerating final TEST ROC and PR plots..."
+)
+
+rf_roc_path, rf_pr_path = plot_roc_pr(
+    y_test,
+    test_rf_blended_probability,
+    "RF Probability Blend",
+    "test"
+)
+
+xgb_roc_path, xgb_pr_path = plot_roc_pr(
+    y_test,
+    test_xgb_blended_probability,
+    "XGBoost Probability Blend",
+    "test"
+)
+
+print("\nPlots saved:")
+print(rf_roc_path)
+print(rf_pr_path)
+print(xgb_roc_path)
+print(xgb_pr_path)
 
 
 # ============================================================
@@ -1447,6 +1603,14 @@ print(
 
 print(
     predictions_path
+)
+
+print(
+    "\nPlots saved to:"
+)
+
+print(
+    PLOTS_DIR
 )
 
 print(

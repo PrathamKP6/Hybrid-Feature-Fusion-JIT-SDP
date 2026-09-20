@@ -50,10 +50,13 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     confusion_matrix,
+    roc_curve,
+    precision_recall_curve,
 )
 from sklearn.preprocessing import OneHotEncoder
 
 from xgboost import XGBClassifier
+import matplotlib.pyplot as plt
 
 try:
     from lightgbm import LGBMClassifier
@@ -90,10 +93,12 @@ OUTPUT_DIR = (
 MODEL_DIR = OUTPUT_DIR / "models"
 METRICS_DIR = OUTPUT_DIR / "metrics"
 PREDICTIONS_DIR = OUTPUT_DIR / "predictions"
+PLOTS_DIR = OUTPUT_DIR / "plots"
 
 MODEL_DIR.mkdir(parents=True, exist_ok=True)
 METRICS_DIR.mkdir(parents=True, exist_ok=True)
 PREDICTIONS_DIR.mkdir(parents=True, exist_ok=True)
+PLOTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 # ============================================================================
@@ -751,6 +756,95 @@ def clean_metrics(metrics):
             "predictions",
         ]
     }
+
+
+def plot_roc_pr(y_true, probabilities, model_name, split_name):
+    """
+    Generate ROC and Precision-Recall curves using the same probabilities
+    used for the reported ROC-AUC and PR-AUC metrics.
+
+    PR-AUC is reported using average_precision_score, so the plot annotation
+    also uses Average Precision for consistency with the experiment metrics.
+    """
+    # ROC curve
+    fpr, tpr, _ = roc_curve(y_true, probabilities)
+    roc_auc = roc_auc_score(y_true, probabilities)
+
+    plt.figure(figsize=(7, 6))
+    plt.plot(
+        fpr,
+        tpr,
+        linewidth=2,
+        label=f"{model_name} (ROC-AUC = {roc_auc:.4f})",
+    )
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        linewidth=1,
+        label="Random classifier",
+    )
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(
+        f"{model_name} - {split_name.capitalize()} ROC Curve"
+    )
+    plt.legend(loc="lower right")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    roc_path = (
+        PLOTS_DIR
+        / f"{model_name.lower().replace(' ', '_')}_"
+          f"{split_name.lower()}_roc.png"
+    )
+    plt.savefig(roc_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+    # Precision-Recall curve
+    precision, recall, _ = precision_recall_curve(
+        y_true,
+        probabilities,
+    )
+    pr_auc = average_precision_score(
+        y_true,
+        probabilities,
+    )
+
+    plt.figure(figsize=(7, 6))
+    plt.plot(
+        recall,
+        precision,
+        linewidth=2,
+        label=f"{model_name} (PR-AUC = {pr_auc:.4f})",
+    )
+    baseline = np.mean(y_true)
+    plt.axhline(
+        baseline,
+        linestyle="--",
+        linewidth=1,
+        label=f"Positive prevalence = {baseline:.4f}",
+    )
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title(
+        f"{model_name} - {split_name.capitalize()} "
+        "Precision-Recall Curve"
+    )
+    plt.legend(loc="lower left")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    pr_path = (
+        PLOTS_DIR
+        / f"{model_name.lower().replace(' ', '_')}_"
+          f"{split_name.lower()}_pr.png"
+    )
+    plt.savefig(pr_path, dpi=300, bbox_inches="tight")
+    plt.close()
+
+    print(f"{split_name.capitalize()} ROC plot: {roc_path}")
+    print(f"{split_name.capitalize()} PR plot:  {pr_path}")
 
 
 # ============================================================================
@@ -1420,6 +1514,24 @@ Models:
         f"\nModel saved:\n  {rf_path}"
     )
 
+    print_header(
+        "GENERATING RANDOM FOREST ROC / PR PLOTS"
+    )
+
+    plot_roc_pr(
+        y["validation"],
+        rf_validation["probabilities"],
+        "Random Forest",
+        "validation",
+    )
+
+    plot_roc_pr(
+        y["test"],
+        rf_test["probabilities"],
+        "Random Forest",
+        "test",
+    )
+
     all_results.append({
         "model": "random_forest",
         "test_accuracy": rf_test["accuracy"],
@@ -1521,6 +1633,24 @@ Models:
 
     print(
         f"\nModel saved:\n  {xgb_path}"
+    )
+
+    print_header(
+        "GENERATING XGBOOST ROC / PR PLOTS"
+    )
+
+    plot_roc_pr(
+        y["validation"],
+        xgb_validation["probabilities"],
+        "XGBoost",
+        "validation",
+    )
+
+    plot_roc_pr(
+        y["test"],
+        xgb_test["probabilities"],
+        "XGBoost",
+        "test",
     )
 
     all_results.append({
@@ -1625,6 +1755,24 @@ Models:
 
     print(
         f"\nModel saved:\n  {lgbm_path}"
+    )
+
+    print_header(
+        "GENERATING LIGHTGBM ROC / PR PLOTS"
+    )
+
+    plot_roc_pr(
+        y["validation"],
+        lgbm_validation["probabilities"],
+        "LightGBM",
+        "validation",
+    )
+
+    plot_roc_pr(
+        y["test"],
+        lgbm_test["probabilities"],
+        "LightGBM",
+        "test",
     )
 
     all_results.append({
@@ -2080,6 +2228,11 @@ Models:
     print(
         "\nConfiguration saved to:"
         f"\n  {OUTPUT_DIR / 'experiment_7_configuration.json'}"
+    )
+
+    print(
+        "\nPlots saved to:"
+        f"\n  {PLOTS_DIR}"
     )
 
 

@@ -26,6 +26,12 @@
     "threshold": 0.5,
     "random_state": 42,
     "xgboost_scale_pos_weight": 2.52568838146407,
+    "plots_generated": true,
+    "plot_types": [
+        "ROC",
+        "Precision-Recall"
+    ],
+    "pr_auc_metric": "average_precision_score",
     "models": [
         "Random Forest",
         "XGBoost"
