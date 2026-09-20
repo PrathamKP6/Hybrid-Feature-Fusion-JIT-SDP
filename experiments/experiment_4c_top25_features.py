@@ -51,7 +51,11 @@ from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
     classification_report,
+    roc_curve,
+    precision_recall_curve,
 )
+
+import matplotlib.pyplot as plt
 
 from xgboost import XGBClassifier
 
@@ -98,6 +102,7 @@ METRICS_DIR = os.path.join(OUTPUT_DIR, "metrics")
 MODELS_DIR = os.path.join(OUTPUT_DIR, "models")
 PREDICTIONS_DIR = os.path.join(OUTPUT_DIR, "predictions")
 FEATURE_DIR = os.path.join(OUTPUT_DIR, "feature_selection")
+PLOTS_DIR = os.path.join(OUTPUT_DIR, "plots")
 
 for directory in [
     OUTPUT_DIR,
@@ -105,6 +110,7 @@ for directory in [
     MODELS_DIR,
     PREDICTIONS_DIR,
     FEATURE_DIR,
+    PLOTS_DIR,
 ]:
     os.makedirs(directory, exist_ok=True)
 
@@ -302,6 +308,142 @@ def evaluate_model(model, X, y, split_name, model_name):
     print(cm)
 
     return results, predictions, probabilities
+
+
+
+# ============================================================
+# PLOT ROC AND PRECISION-RECALL CURVES
+# ============================================================
+
+def plot_roc_pr(
+    y_true,
+    probabilities,
+    model_name,
+    split_name
+):
+    """
+    Save ROC and Precision-Recall curves.
+
+    PR-AUC uses average_precision_score, matching the
+    PR-AUC metric reported by evaluate_model().
+    """
+
+    # --------------------------------------------------------
+    # ROC CURVE
+    # --------------------------------------------------------
+
+    fpr, tpr, _ = roc_curve(
+        y_true,
+        probabilities
+    )
+
+    roc_auc = roc_auc_score(
+        y_true,
+        probabilities
+    )
+
+    plt.figure(figsize=(7, 6))
+
+    plt.plot(
+        fpr,
+        tpr,
+        linewidth=2,
+        label=(
+            f"{model_name} "
+            f"(ROC-AUC = {roc_auc:.4f})"
+        )
+    )
+
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        linewidth=1.5,
+        label="Random classifier"
+    )
+
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+
+    plt.title(
+        f"ROC Curve - {model_name} - "
+        f"{split_name.title()}"
+    )
+
+    plt.legend(loc="lower right")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    roc_path = os.path.join(
+        PLOTS_DIR,
+        f"{model_name.lower().replace(' ', '_')}_"
+        f"{split_name}_roc.png"
+    )
+
+    plt.savefig(
+        roc_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    # --------------------------------------------------------
+    # PRECISION-RECALL CURVE
+    # --------------------------------------------------------
+
+    precision, recall, _ = precision_recall_curve(
+        y_true,
+        probabilities
+    )
+
+    pr_auc = average_precision_score(
+        y_true,
+        probabilities
+    )
+
+    plt.figure(figsize=(7, 6))
+
+    plt.plot(
+        recall,
+        precision,
+        linewidth=2,
+        label=(
+            f"{model_name} "
+            f"(PR-AUC = {pr_auc:.4f})"
+        )
+    )
+
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+
+    plt.title(
+        f"Precision-Recall Curve - {model_name} - "
+        f"{split_name.title()}"
+    )
+
+    plt.legend(loc="lower left")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    pr_path = os.path.join(
+        PLOTS_DIR,
+        f"{model_name.lower().replace(' ', '_')}_"
+        f"{split_name}_pr.png"
+    )
+
+    plt.savefig(
+        pr_path,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
+
+    print(f"ROC curve saved: {roc_path}")
+    print(f"PR curve saved:  {pr_path}")
+
+    return roc_path, pr_path
 
 
 # ============================================================
@@ -902,6 +1044,20 @@ rf_test_results, rf_test_pred, rf_test_prob = evaluate_model(
     "Random Forest"
 )
 
+plot_roc_pr(
+    y_val,
+    rf_val_prob,
+    "Random Forest",
+    "validation"
+)
+
+plot_roc_pr(
+    y_test,
+    rf_test_prob,
+    "Random Forest",
+    "test"
+)
+
 all_results.extend([
     rf_val_results,
     rf_test_results
@@ -926,6 +1082,20 @@ xgb_test_results, xgb_test_pred, xgb_test_prob = evaluate_model(
     y_test,
     "test",
     "XGBoost"
+)
+
+plot_roc_pr(
+    y_val,
+    xgb_val_prob,
+    "XGBoost",
+    "validation"
+)
+
+plot_roc_pr(
+    y_test,
+    xgb_test_prob,
+    "XGBoost",
+    "test"
 )
 
 all_results.extend([
@@ -1143,6 +1313,19 @@ print(selected_path)
 
 print("\nMetrics:")
 print(metrics_path)
+
+print("\nPlots:")
+print(PLOTS_DIR)
+
+print("\nGenerated plots:")
+print("  random_forest_validation_roc.png")
+print("  random_forest_validation_pr.png")
+print("  random_forest_test_roc.png")
+print("  random_forest_test_pr.png")
+print("  xgboost_validation_roc.png")
+print("  xgboost_validation_pr.png")
+print("  xgboost_test_roc.png")
+print("  xgboost_test_pr.png")
 
 print("\n" + "=" * 80)
 print("ALL VERIFICATIONS PASSED")

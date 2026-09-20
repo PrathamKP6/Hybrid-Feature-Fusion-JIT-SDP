@@ -67,7 +67,11 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     confusion_matrix,
+    roc_curve,
+    precision_recall_curve,
 )
+
+import matplotlib.pyplot as plt
 from xgboost import XGBClassifier
 
 
@@ -99,6 +103,8 @@ PREDICTION_DIR = OUTPUT_DIR / "predictions"
 
 CONFUSION_DIR = OUTPUT_DIR / "confusion_matrices"
 
+PLOTS_DIR = OUTPUT_DIR / "plots"
+
 METRICS_DIR = OUTPUT_DIR / "metrics"
 
 for directory in [
@@ -106,6 +112,7 @@ for directory in [
     MODEL_DIR,
     PREDICTION_DIR,
     CONFUSION_DIR,
+    PLOTS_DIR,
     METRICS_DIR,
 ]:
     directory.mkdir(parents=True, exist_ok=True)
@@ -792,6 +799,108 @@ def verify_feature_block():
 
 
 # ============================================================
+# ROC / PR PLOTTING
+# ============================================================
+
+def plot_roc_pr(
+    y_true,
+    probabilities,
+    model_name,
+    split_name,
+):
+    """
+    Save ROC and Precision-Recall curves for a trained model.
+    PR-AUC label uses average precision, matching the reported metric.
+    """
+    safe_model_name = model_name.replace(" ", "_").lower()
+    safe_split_name = split_name.lower()
+
+    # --------------------------------------------------------
+    # ROC curve
+    # --------------------------------------------------------
+    fpr, tpr, _ = roc_curve(
+        y_true,
+        probabilities,
+    )
+
+    roc_auc = roc_auc_score(
+        y_true,
+        probabilities,
+    )
+
+    plt.figure(figsize=(7, 6))
+    plt.plot(
+        fpr,
+        tpr,
+        label=f"{model_name} (ROC-AUC = {roc_auc:.4f})",
+    )
+    plt.plot(
+        [0, 1],
+        [0, 1],
+        linestyle="--",
+        label="Random classifier",
+    )
+    plt.xlabel("False Positive Rate")
+    plt.ylabel("True Positive Rate")
+    plt.title(
+        f"{model_name} — {split_name} ROC Curve"
+    )
+    plt.legend(loc="lower right")
+    plt.tight_layout()
+
+    roc_path = (
+        PLOTS_DIR
+        / f"{safe_model_name}_{safe_split_name}_roc.png"
+    )
+    plt.savefig(
+        roc_path,
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    # --------------------------------------------------------
+    # Precision-Recall curve
+    # --------------------------------------------------------
+    precision, recall, _ = precision_recall_curve(
+        y_true,
+        probabilities,
+    )
+
+    pr_auc = average_precision_score(
+        y_true,
+        probabilities,
+    )
+
+    plt.figure(figsize=(7, 6))
+    plt.plot(
+        recall,
+        precision,
+        label=f"{model_name} (PR-AUC = {pr_auc:.4f})",
+    )
+    plt.xlabel("Recall")
+    plt.ylabel("Precision")
+    plt.title(
+        f"{model_name} — {split_name} Precision-Recall Curve"
+    )
+    plt.legend(loc="lower left")
+    plt.tight_layout()
+
+    pr_path = (
+        PLOTS_DIR
+        / f"{safe_model_name}_{safe_split_name}_pr.png"
+    )
+    plt.savefig(
+        pr_path,
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.close()
+
+    return roc_path, pr_path
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
@@ -1263,6 +1372,37 @@ def main():
         )
 
         # ----------------------------------------------------
+        # ROC / PR PLOTS
+        # ----------------------------------------------------
+
+        validation_roc_path, validation_pr_path = plot_roc_pr(
+            y_validation,
+            validation_probabilities,
+            model_name,
+            "validation",
+        )
+
+        test_roc_path, test_pr_path = plot_roc_pr(
+            y_test,
+            test_probabilities,
+            model_name,
+            "test",
+        )
+
+        print(
+            f"\nValidation ROC plot: {validation_roc_path}"
+        )
+        print(
+            f"Validation PR plot:  {validation_pr_path}"
+        )
+        print(
+            f"Test ROC plot:       {test_roc_path}"
+        )
+        print(
+            f"Test PR plot:        {test_pr_path}"
+        )
+
+        # ----------------------------------------------------
         # STORE RESULTS
         # ----------------------------------------------------
 
@@ -1651,6 +1791,14 @@ def main():
 
     print(
         f"  {CONFUSION_DIR}"
+    )
+
+    print(
+        "\nPlots saved to:"
+    )
+
+    print(
+        f"  {PLOTS_DIR}"
     )
 
     print(
