@@ -23,15 +23,14 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(mes
 logger = logging.getLogger(__name__)
 
 DATA_PATH = PROJECT_ROOT / "data" / "final_multilanguage_dataset_with_embeddings_pca384.csv"
-RESULTS_DATA_DIR = PROJECT_ROOT / "results" / "data"
-FROZEN_SAMPLE_PATH = RESULTS_DATA_DIR / "frozen_sample_dataset.csv"
-FROZEN_COMMIT_IDS_PATH = RESULTS_DATA_DIR / "frozen_sample_commit_ids.csv"
-SAMPLE_RANDOM_STATE = 42
+RESULTS_DIR = PROJECT_ROOT / "results"
+FROZEN_SAMPLE_PATH = RESULTS_DIR / "data" / "frozen_sample_dataset.csv"
+FROZEN_COMMIT_IDS_PATH = RESULTS_DIR / "data" / "frozen_sample_commit_ids.csv"
 
 
 def main() -> None:
     """Generate and save frozen sample dataset."""
-    RESULTS_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     logger.info("Loading dataset from %s", DATA_PATH)
     df = load_commits_csv(DATA_PATH)
@@ -44,26 +43,15 @@ def main() -> None:
         start_year=2018,
         end_year=2026,
     )
-    df_filtered = df_filtered.sort_values(
-        by="author_date",
-        kind="mergesort",
-    ).reset_index(drop=True)
     logger.info("After date filtering: %d rows", len(df_filtered))
 
-    logger.info(
-        "Applying stratified sampling (project × buggy, target=10000, random_state=%d)",
-        SAMPLE_RANDOM_STATE,
-    )
+    logger.info("Applying stratified sampling (project × buggy, target=10000, random_state=42)")
     df_sampled = stratified_sample(
         df_filtered,
         group_columns=("project", "buggy"),
         target_size=10000,
-        random_state=SAMPLE_RANDOM_STATE,
+        random_state=42,
     )
-    df_sampled = df_sampled.sort_values(
-        by="author_date",
-        kind="mergesort",
-    ).reset_index(drop=True)
     logger.info("After stratified sampling: %d rows", len(df_sampled))
 
     logger.info("Saving frozen sample to %s", FROZEN_SAMPLE_PATH)

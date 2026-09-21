@@ -1,0 +1,24 @@
+{
+  "threshold": 0.28,
+  "roc_auc": 0.7576724025899567,
+  "pr_auc": 0.5815444745986881,
+  "precision": 0.4825804300716786,
+  "recall": 0.7509727626459144,
+  "f1": 0.5875786482646641,
+  "mcc": 0.34539973422800185,
+  "accuracy": 0.6613051087590632,
+  "brier": 0.17980992552412592,
+  "tn": 5040,
+  "fp": 3104,
+  "fn": 960,
+  "tp": 2895,
+  "predicted_positive_count": 5999,
+  "predicted_positive_rate": 0.4999583298608217,
+  "base_models": [
+    "XGBoost JIT-only",
+    "XGBoost CodeBERT-only"
+  ],
+  "meta_model": "LogisticRegression(solver=lbfgs, random_state=42)",
+  "threshold_selection": "validation F1",
+  "validation_meta_fit": true
+}
