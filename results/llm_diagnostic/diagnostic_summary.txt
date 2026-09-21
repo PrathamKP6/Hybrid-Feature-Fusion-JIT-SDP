@@ -1,0 +1,57 @@
+LLM FEATURE DIAGNOSTIC SUMMARY
+==============================================================================
+
+All buggy-label association analyses use TRAIN ONLY.
+
+train: rows=41998, buggy=11912, buggy_rate=0.2836
+validation: rows=8998, buggy=2082, buggy_rate=0.2314
+test: rows=9000, buggy=1376, buggy_rate=0.1529
+
+TOP UNIVARIATE SIGNAL (TRAIN ONLY)
+------------------------------------------------------------------------------
+complexity_confidence        nan                AUC=0.3436 symmetric_AUC=0.6564
+complexity_margin            nan                AUC=0.3473 symmetric_AUC=0.6527
+risk_confidence              nan                AUC=0.3929 symmetric_AUC=0.6071
+security_confidence          nan                AUC=0.3944 symmetric_AUC=0.6056
+scope_confidence             nan                AUC=0.3979 symmetric_AUC=0.6021
+scope_margin                 nan                AUC=0.3987 symmetric_AUC=0.6013
+scope                        M                  AUC=0.3996 symmetric_AUC=0.6004
+risk_margin                  nan                AUC=0.4046 symmetric_AUC=0.5954
+security_margin              nan                AUC=0.4092 symmetric_AUC=0.5908
+change_confidence            nan                AUC=0.4100 symmetric_AUC=0.5900
+complexity                   M                  AUC=0.4107 symmetric_AUC=0.5893
+test_confidence              nan                AUC=0.4128 symmetric_AUC=0.5872
+intent                       BF                 AUC=0.4150 symmetric_AUC=0.5850
+test_margin                  nan                AUC=0.4184 symmetric_AUC=0.5816
+test                         M                  AUC=0.4211 symmetric_AUC=0.5789
+security                     N                  AUC=0.4224 symmetric_AUC=0.5776
+risk                         M                  AUC=0.4262 symmetric_AUC=0.5738
+change                       OT                 AUC=0.4305 symmetric_AUC=0.5695
+change_margin                nan                AUC=0.4325 symmetric_AUC=0.5675
+intent_confidence            nan                AUC=0.4376 symmetric_AUC=0.5624
+
+MOST ASSOCIATED CATEGORICAL PAIRS (TRAIN ONLY)
+------------------------------------------------------------------------------
+risk                 x security             Cramer's V=0.7396
+complexity           x scope                Cramer's V=0.3886
+change               x complexity           Cramer's V=0.3772
+change               x scope                Cramer's V=0.3616
+risk                 x test                 Cramer's V=0.3491
+complexity           x test                 Cramer's V=0.3478
+risk                 x complexity           Cramer's V=0.3460
+complexity           x security             Cramer's V=0.3453
+risk                 x scope                Cramer's V=0.3430
+scope                x test                 Cramer's V=0.3158
+change               x risk                 Cramer's V=0.3157
+change               x test                 Cramer's V=0.2990
+scope                x security             Cramer's V=0.2760
+change               x security             Cramer's V=0.2748
+intent               x complexity           Cramer's V=0.2727
+
+INTERPRETATION GUIDE
+------------------------------------------------------------------------------
+• Large category concentration = limited variation.
+• Large buggy-rate differences = possible univariate signal.
+• High Cramer's V = possible redundancy between semantic dimensions.
+• Train/validation/test distribution changes = possible temporal/population drift.
+• This diagnostic does not tune or evaluate a final model on the test set.
