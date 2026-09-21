@@ -1,0 +1,112 @@
+{
+  "experiment": "7D",
+  "name": "MI Top-25 JIT + CodeBERT + LLM Feature Fusion",
+  "feature_counts": {
+    "full": 447,
+    "selected": 25,
+    "jit": 12,
+    "codebert": 384,
+    "llm": 51
+  },
+  "feature_selection": {
+    "method": "mutual_information",
+    "fit_on": "train_only",
+    "top_k": 25,
+    "random_state": 42,
+    "n_neighbors": 3
+  },
+  "jit_features": [
+    "la",
+    "ld",
+    "nf",
+    "ns",
+    "nd",
+    "ent",
+    "ndev",
+    "age",
+    "nuc",
+    "aexp",
+    "arexp",
+    "asexp"
+  ],
+  "llm_categorical_columns": [
+    "intent",
+    "change",
+    "risk",
+    "complexity",
+    "scope",
+    "test",
+    "security"
+  ],
+  "llm_numerical_columns": [
+    "intent_confidence",
+    "change_confidence",
+    "risk_confidence",
+    "complexity_confidence",
+    "scope_confidence",
+    "test_confidence",
+    "security_confidence",
+    "intent_margin",
+    "change_margin",
+    "risk_margin",
+    "complexity_margin",
+    "scope_margin",
+    "test_margin",
+    "security_margin"
+  ],
+  "codebert_input": {
+    "train": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\pca\\train_pca384.csv",
+    "validation": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\pca\\validation_pca384.csv",
+    "test": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\pca\\test_pca384.csv",
+    "pca_components_source": 384,
+    "pca_fit": "train_only"
+  },
+  "llm_input": {
+    "train": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\data\\llm_experiment_dataset\\train.csv",
+    "validation": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\data\\llm_experiment_dataset\\validation.csv",
+    "test": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\data\\llm_experiment_dataset\\test.csv",
+    "one_hot_features": 37,
+    "numerical_features": 14
+  },
+  "jit_input": {
+    "train": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\chronological_splits\\train.csv",
+    "validation": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\chronological_splits\\validation.csv",
+    "test": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\chronological_splits\\test.csv"
+  },
+  "models": {
+    "random_forest": {
+      "n_estimators": 300,
+      "max_features": "sqrt",
+      "class_weight": "balanced",
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "xgboost": {
+      "n_estimators": 300,
+      "max_depth": 6,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "eval_metric": "logloss",
+      "scale_pos_weight": 2.52568838146407,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "lightgbm": {
+      "n_estimators": 300,
+      "max_depth": 6,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "scale_pos_weight": 2.52568838146407,
+      "objective": "binary",
+      "random_state": 42,
+      "n_jobs": -1,
+      "verbosity": -1
+    }
+  },
+  "threshold": 0.5,
+  "resampling": false,
+  "random_split": false,
+  "test_used_for_tuning": false
+}

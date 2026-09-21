@@ -1,0 +1,35 @@
+{
+    "experiment": "Experiment 5 - JIT + LLM",
+    "sources": {
+        "canonical": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\chronological_splits",
+        "raw_llm": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\data\\llm_experiment_dataset"
+    },
+    "outputs": {
+        "datasets": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\experiment_5_jit_llm\\datasets",
+        "llm_preprocessed": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\experiment_5_jit_llm\\llm_preprocessed",
+        "metadata": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\experiment_5_jit_llm\\metadata"
+    },
+    "merge": {
+        "key": "commit_id",
+        "type": "inner",
+        "validate": "one_to_one",
+        "performed_separately_per_split": true
+    },
+    "split_policy": "Existing chronological train/validation/test splits preserved; no new split created.",
+    "rows": {
+        "train": 41998,
+        "validation": 8998,
+        "test": 9000
+    },
+    "total_rows": 59996,
+    "preprocessing": {
+        "one_hot_encoder_fitted_on": "train only",
+        "one_hot_handle_unknown": "ignore",
+        "llm_numeric_features_unchanged": true,
+        "pca_applied": false,
+        "resampling_applied": false,
+        "random_split_applied": false
+    },
+    "source_csvs_modified": false,
+    "encoder_path": "D:\\Hybrid-Feature-Fusion-JIT-SDP\\results\\experiment_5_jit_llm\\llm_preprocessed\\one_hot_encoder.joblib"
+}

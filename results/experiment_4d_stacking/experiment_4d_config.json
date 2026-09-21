@@ -1,0 +1,36 @@
+{
+    "experiment": "4D",
+    "method": "Probability Stacking",
+    "base_models": [
+        "JIT Random Forest",
+        "CodeBERT Random Forest",
+        "JIT XGBoost",
+        "CodeBERT XGBoost"
+    ],
+    "meta_model": "Logistic Regression",
+    "jit_features": [
+        "la",
+        "ld",
+        "nf",
+        "ns",
+        "nd",
+        "ent",
+        "ndev",
+        "age",
+        "nuc",
+        "aexp",
+        "arexp",
+        "asexp"
+    ],
+    "jit_dimension": 12,
+    "codebert_dimension": 384,
+    "codebert_feature_selection": false,
+    "additional_transformation": false,
+    "additional_pca": false,
+    "resampling": false,
+    "meta_training": "validation_probabilities",
+    "test_usage": "final_evaluation_only",
+    "threshold": 0.5,
+    "random_state": 42,
+    "split_strategy": "project-wise chronological 70/15/15"
+}

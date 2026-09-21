@@ -1,0 +1,39 @@
+{
+    "experiment": "Experiment 4 - JIT + CodeBERT Fusion",
+    "fusion_method": "Early feature concatenation",
+    "split_method": "Project-wise chronological 70/15/15",
+    "train_rows": 41998,
+    "validation_rows": 8998,
+    "test_rows": 9000,
+    "jit_feature_count": 12,
+    "jit_features": [
+        "la",
+        "ld",
+        "nf",
+        "ns",
+        "nd",
+        "ent",
+        "ndev",
+        "age",
+        "nuc",
+        "aexp",
+        "arexp",
+        "asexp"
+    ],
+    "original_codebert_dimension": 768,
+    "pca_codebert_dimension": 384,
+    "total_feature_dimension": 396,
+    "pca_fitted_on": "training split only",
+    "join_key": "commit_id",
+    "jit_features_used": true,
+    "codebert_features_used": true,
+    "resampling_used": false,
+    "random_split_used": false,
+    "threshold": 0.5,
+    "random_state": 42,
+    "xgboost_scale_pos_weight": 2.52568838146407,
+    "models": [
+        "Random Forest",
+        "XGBoost"
+    ]
+}

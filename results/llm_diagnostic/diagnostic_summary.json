@@ -1,0 +1,223 @@
+{
+  "train_rows": 41998,
+  "train_buggy_rate": 0.28363255393113956,
+  "top_univariate": [
+    {
+      "feature": "complexity_confidence",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.3435950616292395,
+      "symmetric_auc": 0.6564049383707604
+    },
+    {
+      "feature": "complexity_margin",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.3473278674671896,
+      "symmetric_auc": 0.6526721325328104
+    },
+    {
+      "feature": "risk_confidence",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.3929090089493619,
+      "symmetric_auc": 0.6070909910506381
+    },
+    {
+      "feature": "security_confidence",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.3944150007051645,
+      "symmetric_auc": 0.6055849992948354
+    },
+    {
+      "feature": "scope_confidence",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.397895262091072,
+      "symmetric_auc": 0.6021047379089279
+    },
+    {
+      "feature": "scope_margin",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.3987181759055873,
+      "symmetric_auc": 0.6012818240944127
+    },
+    {
+      "feature": "scope",
+      "type": "categorical_indicator",
+      "category_or_value": "M",
+      "roc_auc": 0.3996300123884845,
+      "symmetric_auc": 0.6003699876115155
+    },
+    {
+      "feature": "risk_margin",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.4046206965262374,
+      "symmetric_auc": 0.5953793034737626
+    },
+    {
+      "feature": "security_margin",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.4091680996902231,
+      "symmetric_auc": 0.5908319003097768
+    },
+    {
+      "feature": "change_confidence",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.4099828588536457,
+      "symmetric_auc": 0.5900171411463542
+    },
+    {
+      "feature": "complexity",
+      "type": "categorical_indicator",
+      "category_or_value": "M",
+      "roc_auc": 0.4106952837728175,
+      "symmetric_auc": 0.5893047162271825
+    },
+    {
+      "feature": "test_confidence",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.41281348543622,
+      "symmetric_auc": 0.58718651456378
+    },
+    {
+      "feature": "intent",
+      "type": "categorical_indicator",
+      "category_or_value": "BF",
+      "roc_auc": 0.4149978339460906,
+      "symmetric_auc": 0.5850021660539093
+    },
+    {
+      "feature": "test_margin",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.4184165259723111,
+      "symmetric_auc": 0.5815834740276888
+    },
+    {
+      "feature": "test",
+      "type": "categorical_indicator",
+      "category_or_value": "M",
+      "roc_auc": 0.4210603377994946,
+      "symmetric_auc": 0.5789396622005054
+    },
+    {
+      "feature": "security",
+      "type": "categorical_indicator",
+      "category_or_value": "N",
+      "roc_auc": 0.4223613122793235,
+      "symmetric_auc": 0.5776386877206765
+    },
+    {
+      "feature": "risk",
+      "type": "categorical_indicator",
+      "category_or_value": "M",
+      "roc_auc": 0.4261986218195995,
+      "symmetric_auc": 0.5738013781804004
+    },
+    {
+      "feature": "change",
+      "type": "categorical_indicator",
+      "category_or_value": "OT",
+      "roc_auc": 0.4304566639211605,
+      "symmetric_auc": 0.5695433360788394
+    },
+    {
+      "feature": "change_margin",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.432454483681367,
+      "symmetric_auc": 0.5675455163186329
+    },
+    {
+      "feature": "intent_confidence",
+      "type": "numerical",
+      "category_or_value": NaN,
+      "roc_auc": 0.43762045724129,
+      "symmetric_auc": 0.5623795427587099
+    }
+  ],
+  "top_categorical_associations": [
+    {
+      "feature_1": "risk",
+      "feature_2": "security",
+      "cramers_v": 0.7395679699557562
+    },
+    {
+      "feature_1": "complexity",
+      "feature_2": "scope",
+      "cramers_v": 0.3885570052285306
+    },
+    {
+      "feature_1": "change",
+      "feature_2": "complexity",
+      "cramers_v": 0.3771669509767159
+    },
+    {
+      "feature_1": "change",
+      "feature_2": "scope",
+      "cramers_v": 0.3615816451528051
+    },
+    {
+      "feature_1": "risk",
+      "feature_2": "test",
+      "cramers_v": 0.3490637632453874
+    },
+    {
+      "feature_1": "complexity",
+      "feature_2": "test",
+      "cramers_v": 0.3478073236727417
+    },
+    {
+      "feature_1": "risk",
+      "feature_2": "complexity",
+      "cramers_v": 0.3459543712955372
+    },
+    {
+      "feature_1": "complexity",
+      "feature_2": "security",
+      "cramers_v": 0.3452849218033922
+    },
+    {
+      "feature_1": "risk",
+      "feature_2": "scope",
+      "cramers_v": 0.3429966532401547
+    },
+    {
+      "feature_1": "scope",
+      "feature_2": "test",
+      "cramers_v": 0.3157869040527731
+    },
+    {
+      "feature_1": "change",
+      "feature_2": "risk",
+      "cramers_v": 0.3156738801042914
+    },
+    {
+      "feature_1": "change",
+      "feature_2": "test",
+      "cramers_v": 0.2989556080910592
+    },
+    {
+      "feature_1": "scope",
+      "feature_2": "security",
+      "cramers_v": 0.2759779463284697
+    },
+    {
+      "feature_1": "change",
+      "feature_2": "security",
+      "cramers_v": 0.2748468600570549
+    },
+    {
+      "feature_1": "intent",
+      "feature_2": "complexity",
+      "cramers_v": 0.2726802410278131
+    }
+  ]
+}

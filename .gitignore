@@ -11,8 +11,11 @@ frozen_sample_dataset.csv
 results/experiment_1/models/*
 results/experiment_2/models/*
 results/data/java_only_frozen_sample_dataset.csv
-data/final_multilanguage_dataset_with_embeddings.csv
-data/java_only_final_multilanguage_dataset_with_embeddings_pca384.csv
+data/final_multilanguage_59996_szz_buggy.csv
+data/final_multilanguage_szz_buggy_384d.csv
+data/llm_experiment_dataset/*
+data/llm_experiment_preprocessed/*
+cpp_python_mining_code/cpython_python_history.pkl
 # Large cloned repositories
 cpp_python_mining_code/cpython/
 cpp_python_mining_code/godot/
@@ -22,8 +25,6 @@ data/
 
 # Generated CSV files
 cpp_python_mining_code/*.csv
-cpp_python_mining_code/data/llm_input_59996.csv
-experiments/
-results/chronological_splits
-results/pca
-cpp_python_mining_code/dataset_inspection_output.txt
+results/chronological_splits/train.csv
+results/chronological_splits/test.csv
+results/chronological_splits/validation.csv
