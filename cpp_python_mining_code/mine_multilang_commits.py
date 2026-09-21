@@ -15,7 +15,6 @@ from pydriller import Repository
 COLUMNS = [
     "commit_id",
     "project",
-    "language",
     "buggy",
     "fix",
     "year",
@@ -36,11 +35,11 @@ COLUMNS = [
     "diff",
 ]
 
-TARGET_COMMITS_PER_LANGUAGE = 12000
+MAX_COMMITS_PER_REPO = 2000
 
 BUG_KEYWORDS = ("fix", "bug", "error", "issue", "patch", "resolve", "hotfix")
 PY_EXTS = {".py"}
-CPP_EXTS = {".cpp", ".cc", ".cxx", ".hpp", ".hh", ".hxx", ".h"}
+CPP_EXTS = {".cpp", ".cc", ".hpp", ".h"}
 
 
 @dataclass(frozen=True)
@@ -224,11 +223,6 @@ def commit_to_row(commit, spec: RepoSpec, history: FileHistoryTracker) -> Dict[s
     row = {
         "commit_id": commit.hash,
         "project": spec.project,
-        "language": (
-            "python"
-            if spec.project.startswith("python/")
-            else "cpp"
-        ),
         "buggy": bool(buggy),
         "fix": bool(buggy),
         "year": int(commit_dt.year),
@@ -251,117 +245,22 @@ def commit_to_row(commit, spec: RepoSpec, history: FileHistoryTracker) -> Dict[s
     return row
 
 
-def recent_commit_window_for_target(
-    repo_path: Path,
-    extensions: Set[str],
-    target_relevant: int,
-) -> List[str]:
-    """
-    Scan Git history from newest to oldest until target_relevant commits that
-    touch the requested language are found. Return the whole scanned window
-    in chronological order (oldest -> newest) so JIT history features are
-    computed without future leakage inside the selected window.
-    """
-    repo = Repo(str(repo_path))
-    newest_to_oldest: List[str] = []
-    relevant_found = 0
-
-    for inspected, git_commit in enumerate(repo.iter_commits(), start=1):
-        newest_to_oldest.append(git_commit.hexsha)
-
-        try:
-            changed_paths = list(git_commit.stats.files.keys())
-        except Exception:
-            changed_paths = []
-
-        if any(file_is_relevant(path, extensions) for path in changed_paths):
-            relevant_found += 1
-
-        if inspected % 500 == 0:
-            print(
-                f"Pre-scan: inspected {inspected} Git commits; "
-                f"found {relevant_found}/{target_relevant} relevant commits",
-                flush=True,
-            )
-
-        if relevant_found >= target_relevant:
-            break
-
-    if relevant_found < target_relevant:
-        print(
-            f"WARNING: repository history contains only {relevant_found} "
-            f"commits matching {sorted(extensions)}; requested {target_relevant}.",
-            flush=True,
-        )
-
-    return list(reversed(newest_to_oldest))
-
-
-def mine_repository(
-    spec: RepoSpec,
-    target_rows: int,
-) -> pd.DataFrame:
-    """
-    Mine the most recent target_rows relevant commits for one repository.
-
-    First determine a recent commit window, then traverse that window
-    chronologically so FileHistoryTracker only uses prior commits.
-    """
-    if target_rows <= 0:
-        return pd.DataFrame(columns=COLUMNS)
-
-    commit_hashes = recent_commit_window_for_target(
-        spec.path,
-        spec.extensions,
-        target_rows,
-    )
-
+def mine_repository(spec: RepoSpec, max_commits: int = MAX_COMMITS_PER_REPO) -> pd.DataFrame:
     history = FileHistoryTracker(spec.path)
+    commit_hashes = list(reversed(git_commit_list(spec.path, max_commits)))
     rows: List[Dict[str, object]] = []
 
-    for index, commit in enumerate(
-        Repository(
-            str(spec.path),
-            only_commits=commit_hashes,
-        ).traverse_commits(),
-        start=1,
-    ):
+    for index, commit in enumerate(Repository(str(spec.path), only_commits=commit_hashes).traverse_commits(), start=1):
         row = commit_to_row(commit, spec, history)
-
-        changed_files = [
-            normalize_path(m.new_path or m.old_path)
-            for m in commit.modified_files
-            if (m.new_path or m.old_path)
-        ]
-
-        commit_dt = (
-            commit.author_date.replace(tzinfo=timezone.utc)
-            if commit.author_date.tzinfo is None
-            else commit.author_date.astimezone(timezone.utc)
-        )
-
-        history.record_commit(
-            commit.author.name or commit.author.email or "unknown",
-            commit_dt,
-            changed_files,
-        )
-
+        changed_files = [normalize_path(m.new_path or m.old_path) for m in commit.modified_files if (m.new_path or m.old_path)]
+        history.record_commit(commit.author.name or commit.author.email or "unknown", commit.author_date.replace(tzinfo=timezone.utc) if commit.author_date.tzinfo is None else commit.author_date.astimezone(timezone.utc), changed_files)
         if row is not None:
             rows.append(row)
-
         if index % 100 == 0:
-            print(
-                f"{spec.name}: processed {index}/{len(commit_hashes)} Git commits; "
-                f"retained {len(rows)}/{target_rows}",
-                flush=True,
-            )
+            print(f"{spec.name}: processed {index}/{len(commit_hashes)} commits, kept {len(rows)} rows", flush=True)
 
-    # Keep the newest target_rows relevant rows if the pre-scan slightly
-    # over-counted due to Git/PyDriller path representation differences.
-    if len(rows) > target_rows:
-        rows = rows[-target_rows:]
-
-    return pd.DataFrame(rows, columns=COLUMNS)
+    df = pd.DataFrame(rows, columns=COLUMNS)
+    return df
 
 
 def validate_schema(df: pd.DataFrame) -> None:
@@ -382,127 +281,43 @@ def load_optional_csv(path: Path) -> pd.DataFrame | None:
     return None
 
 
-def find_existing_flask_csv(base_dir: Path) -> Path:
-    candidates = [
-        base_dir / "python_flask_dataset.csv",
-        base_dir / "flask_dataset.csv",
-    ]
-    for path in candidates:
-        if path.exists():
-            return path
-    raise FileNotFoundError(
-        "Existing Flask CSV not found. Expected python_flask_dataset.csv "
-        "or flask_dataset.csv beside this script."
-    )
-
-
 def main() -> None:
     base_dir = Path(__file__).resolve().parent
+    data_dir = base_dir.parent / "data"
+    flask_repo = base_dir / "flask"
+    opencv_repo = base_dir / "opencv"
 
-    flask_path = find_existing_flask_csv(base_dir)
-    flask_df = pd.read_csv(flask_path)
+    specs = [
+        RepoSpec(name="flask", path=flask_repo, project="python/flask", extensions=PY_EXTS),
+        RepoSpec(name="opencv", path=opencv_repo, project="cpp/opencv", extensions=CPP_EXTS),
+    ]
 
-    if list(flask_df.columns) != COLUMNS:
-        raise ValueError(
-            f"Flask dataset schema mismatch: {list(flask_df.columns)}"
-        )
+    outputs = []
+    for spec in specs:
+        print(f"Mining {spec.name}...")
+        df = mine_repository(spec, max_commits=MAX_COMMITS_PER_REPO)
+        validate_schema(df)
+        output_path = data_dir / f"{spec.project.replace('/', '_')}_dataset.csv"
+        save_dataset(df, output_path)
+        outputs.append(output_path)
+        print(f"Saved {output_path} with {len(df)} rows")
 
-    # Avoid accidental duplicate commit IDs in an already-mined Flask file.
-    flask_df = flask_df.drop_duplicates(subset=["commit_id"]).copy()
-
-    flask_rows = len(flask_df)
-    remaining = max(TARGET_COMMITS_PER_LANGUAGE - flask_rows, 0)
-
-    print("=" * 72)
-    print("PYTHON MINING TARGET")
-    print("=" * 72)
-    print(f"Existing Flask rows: {flask_rows}")
-    print(f"Python target:       {TARGET_COMMITS_PER_LANGUAGE}")
-    print(f"Still required:      {remaining}")
-
-    if remaining == 0:
-        final_python = flask_df.iloc[:TARGET_COMMITS_PER_LANGUAGE].copy()
+    java_path = base_dir / "java_dataset.csv"
+    java_df = load_optional_csv(java_path)
+    if java_df is not None:
+        python_df = pd.read_csv(outputs[0])
+        cpp_df = pd.read_csv(outputs[1])
+        for frame_name, frame in (("java", java_df), ("python", python_df), ("cpp", cpp_df)):
+            if list(frame.columns) != COLUMNS:
+                raise ValueError(f"{frame_name} dataset schema mismatch: {list(frame.columns)}")
+        final_df = pd.concat([java_df, python_df, cpp_df], ignore_index=True)
+        final_df.to_csv(data_dir / "final_multilanguage_dataset.csv", index=False)
+        print(final_df.shape)
+        print(final_df["buggy"].value_counts(dropna=False))
+        print(final_df.isna().sum())
+        print(f"Saved {data_dir / 'final_multilanguage_dataset.csv'}")
     else:
-        # Split the missing amount approximately evenly. If Django yields
-        # fewer than requested, CPython automatically receives the shortfall.
-        django_target = (remaining + 1) // 2
-
-        django_spec = RepoSpec(
-            name="django",
-            path=base_dir / "django",
-            project="python/django",
-            extensions=PY_EXTS,
-        )
-        cpython_spec = RepoSpec(
-            name="cpython",
-            path=base_dir / "cpython",
-            project="python/cpython",
-            extensions=PY_EXTS,
-        )
-
-        for spec in (django_spec, cpython_spec):
-            if not spec.path.exists():
-                raise FileNotFoundError(
-                    f"Repository not found: {spec.path}\n"
-                    f"Clone it beside this script before running."
-                )
-
-        print(f"\nMining Django target: {django_target}")
-        django_df = mine_repository(
-            django_spec,
-            target_rows=django_target,
-        )
-        validate_schema(django_df)
-        django_path = base_dir / "python_django_dataset.csv"
-        save_dataset(django_df, django_path)
-        print(f"Saved {django_path} with {len(django_df)} rows")
-
-        cpython_target = remaining - len(django_df)
-        print(f"\nMining CPython target: {cpython_target}")
-        cpython_df = mine_repository(
-            cpython_spec,
-            target_rows=cpython_target,
-        )
-        validate_schema(cpython_df)
-        cpython_path = base_dir / "python_cpython_dataset.csv"
-        save_dataset(cpython_df, cpython_path)
-        print(f"Saved {cpython_path} with {len(cpython_df)} rows")
-
-        final_python = pd.concat(
-            [flask_df, django_df, cpython_df],
-            ignore_index=True,
-        )
-
-        # Cross-repository hashes should already be distinct in practice,
-        # but project + commit_id is the safe uniqueness key.
-        final_python = final_python.drop_duplicates(
-            subset=["project", "commit_id"]
-        )
-
-        if len(final_python) > TARGET_COMMITS_PER_LANGUAGE:
-            # Preserve all Flask rows already produced and trim only if a
-            # pre-scan yielded a tiny excess.
-            final_python = final_python.iloc[:TARGET_COMMITS_PER_LANGUAGE]
-
-    output_path = base_dir / "python_12000_dataset.csv"
-    save_dataset(final_python, output_path)
-
-    print("\n" + "=" * 72)
-    print("FINAL PYTHON DATASET")
-    print("=" * 72)
-    print(f"Rows: {len(final_python)}")
-    print(final_python["project"].value_counts())
-    print("\nBug/fix labels:")
-    print(final_python["buggy"].value_counts(dropna=False))
-    print("\nMissing values:")
-    print(final_python.isna().sum())
-    print(f"\nSaved: {output_path}")
-
-    if len(final_python) < TARGET_COMMITS_PER_LANGUAGE:
-        raise RuntimeError(
-            f"Only {len(final_python)} Python rows were produced; "
-            f"{TARGET_COMMITS_PER_LANGUAGE} were required."
-        )
+        print("java_dataset.csv not found; skipped final merge.")
 
 
 if __name__ == "__main__":

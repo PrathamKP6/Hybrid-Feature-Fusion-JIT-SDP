@@ -21,26 +21,10 @@ cpp_python_mining_code/cpython/
 cpp_python_mining_code/godot/
 cpp_python_mining_code/krita/
 cpp_python_mining_code/opencv/
+data/
 
 # Generated CSV files
 cpp_python_mining_code/*.csv
-
-# status files
-run_split.status
-smoke_projectwise.status
-
-# Large generated datasets
-results/chronological_splits/*.csv
-results/pca/*.csv
-
-# Trained model artifacts
-*.joblib
-
-# PCA generated artifacts
-*.npz
-
-# Generated embeddings
-*.npy
-
-results/experiment_5_jit_llm/datasets/*.csv
-results/experiment_5_jit_llm/llm_preprocessed/*.csv
+results/chronological_splits/train.csv
+results/chronological_splits/test.csv
+results/chronological_splits/validation.csv
