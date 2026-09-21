@@ -1,0 +1,68 @@
+{
+  "method": "MI ranking followed by greedy correlation redundancy filtering",
+  "correlation_threshold": 0.9,
+  "top_k": 14,
+  "original_llm_features": 51,
+  "non_redundant_features": 44,
+  "selected_features": [
+    "complexity_margin",
+    "scope_M",
+    "risk_confidence",
+    "scope_margin",
+    "complexity_M",
+    "test_M",
+    "test_confidence",
+    "security_margin",
+    "security_N",
+    "change_confidence",
+    "risk_M",
+    "change_OT",
+    "complexity_L",
+    "test_L"
+  ],
+  "removed_redundant_features": [
+    {
+      "feature": "complexity_confidence",
+      "reason": "high_correlation",
+      "correlated_with": "complexity_margin",
+      "absolute_correlation": 0.9917716937995027
+    },
+    {
+      "feature": "scope_confidence",
+      "reason": "high_correlation",
+      "correlated_with": "scope_margin",
+      "absolute_correlation": 0.9934119413291297
+    },
+    {
+      "feature": "risk_margin",
+      "reason": "high_correlation",
+      "correlated_with": "risk_confidence",
+      "absolute_correlation": 0.9852939815532381
+    },
+    {
+      "feature": "security_confidence",
+      "reason": "high_correlation",
+      "correlated_with": "security_margin",
+      "absolute_correlation": 0.9818964821005344
+    },
+    {
+      "feature": "test_margin",
+      "reason": "high_correlation",
+      "correlated_with": "test_confidence",
+      "absolute_correlation": 0.975863464581594
+    },
+    {
+      "feature": "change_margin",
+      "reason": "high_correlation",
+      "correlated_with": "change_confidence",
+      "absolute_correlation": 0.953939574688892
+    },
+    {
+      "feature": "intent_margin",
+      "reason": "high_correlation",
+      "correlated_with": "intent_confidence",
+      "absolute_correlation": 0.9835833699439249
+    }
+  ],
+  "leakage_control": "All preprocessing, MI and correlation selection fitted/calculated on TRAIN only."
+}
