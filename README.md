@@ -39,15 +39,10 @@ The final dataset contains:
 from Java, C++, and Python projects.
 
 | Language | Approx. Share | Approx. Commits |
-
 |---|---:|---:|
-
 | Java | 60% | 36,000 |
-
 | C++ | 20% | 12,000 |
-
 | Python | 20% | 11,996 |
-
 | **Total** | **100%** | **59,996** |
 
 The dataset covers approximately:
@@ -95,13 +90,9 @@ The target variable is the SZZ-derived binary defect label:
 Final label distribution:
 
 | Label | Commits | Percentage |
-
 |---|---:|---:|
-
 | Non-buggy | 44,626 | 74.38% |
-
 | Buggy | 15,370 | 25.62% |
-
 | **Total** | **59,996** | **100%** |
 
 The canonical SZZ-labelled dataset is used as the authoritative source for the target variable.
@@ -135,15 +126,10 @@ Newest 15% → Test
 ### Final Split
 
 | Split | Rows | Buggy | Buggy Prevalence |
-
 |---|---:|---:|---:|
-
 | Training | 41,998 | 11,912 | 28.36% |
-
 | Validation | 8,998 | 2,082 | 23.14% |
-
 | Test | 9,000 | 1,376 | 15.29% |
-
 | **Total** | **59,996** | **15,370** | — |
 
 This protocol simulates predicting defects in future commits using information available from earlier commits.
@@ -207,38 +193,25 @@ No test performance is used to select:
 The final JIT representation contains **12 features**.
 
 | Feature | Description |
-
 |---|---|
-
 | `la` | Lines added |
-
 | `ld` | Lines deleted |
-
 | `nf` | Number of modified files |
-
 | `ns` | Number of modified subsystems |
-
 | `nd` | Number of modified directories |
-
 | `ent` | Entropy / distribution of changes |
-
 | `ndev` | Number of developers associated with modified files |
-
 | `age` | Average time since previous modification |
-
 | `nuc` | Number of unique changes |
-
 | `aexp` | Author experience |
-
 | `arexp` | Recent author experience |
-
 | `asexp` | Subsystem experience |
 
 The obsolete `fix` feature is **not included** in the final 12-feature JIT representation.
 
 ---
 
-# 2. CodeBERT Semantic Features
+## 2. CodeBERT Semantic Features
 
 CodeBERT is used to obtain semantic representations of commit changes.
 
@@ -294,7 +267,7 @@ Reduced CodeBERT representations are also evaluated using:
 
 ---
 
-# 3. LLM Semantic Features
+## 3. LLM Semantic Features
 
 The LLM pipeline extracts structured semantic information from software changes.
 
@@ -511,25 +484,15 @@ security_margin
 The main feature configurations evaluated in the project are:
 
 | Representation | JIT | CodeBERT | LLM | Total |
-
 |---|---:|---:|---:|---:|
-
 | JIT-only | 12 | 0 | 0 | 12 |
-
 | CodeBERT-only | 0 | 384 | 0 | 384 |
-
 | LLM-only | 0 | 0 | 51 | 51 |
-
 | JIT + CodeBERT | 12 | 384 | 0 | 396 |
-
 | JIT + LLM | 12 | 0 | 51 | 63 |
-
 | CodeBERT + LLM | 0 | 384 | 51 | 435 |
-
 | Full Fusion | 12 | 384 | 51 | 447 |
-
 | Experiment 8 | 12 | 384 | 14 | 410 |
-
 | Experiment 9 | 12 | 384 | 14 | 410 |
 
 ---
