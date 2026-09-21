@@ -1,0 +1,24 @@
+{
+  "experiment": "7E",
+  "name": "Probability Stacking \u2014 RF + XGBoost + LightGBM on 447-feature three-way fusion",
+  "feature_counts": {
+    "jit": 12,
+    "codebert": 384,
+    "llm": 51,
+    "total": 447
+  },
+  "pca": "384 components, fitted train only",
+  "one_hot": "train only",
+  "median_imputation": "train only",
+  "base_models": [
+    "Random Forest",
+    "XGBoost",
+    "LightGBM"
+  ],
+  "meta_model": "Logistic Regression",
+  "meta_training": "validation probabilities only",
+  "threshold": 0.5,
+  "resampling": false,
+  "random_split": false,
+  "test_used_for_tuning": false
+}

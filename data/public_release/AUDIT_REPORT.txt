@@ -1,0 +1,38 @@
+PUBLICATION DATASET AUDIT REPORT
+======================================================================
+
+STATUS: PASS
+
+Rows: 59,996
+Columns: 44
+Unique commit IDs: 59,996
+CodeBERT dimension: 768
+JIT features: 12
+Projects: 19
+
+LABELS
+----------------------------------------------------------------------
+Non-buggy (0): 44,626
+Buggy (1): 15,370
+
+SPLITS
+----------------------------------------------------------------------
+Train: 41,998
+Validation: 8,998
+Test: 9,000
+
+AUDITS
+----------------------------------------------------------------------
+[PASS] Row count
+[PASS] Unique commit IDs
+[PASS] Binary buggy labels
+[PASS] 12 JIT features
+[PASS] 768-D CodeBERT embeddings
+[PASS] Chronological split counts
+[PASS] No split overlap
+[PASS] Complete split coverage
+[PASS] ZIP integrity
+[INFO] Language column not stored in final master dataset
+[PASS] Project metadata
+
+Publication audit completed.

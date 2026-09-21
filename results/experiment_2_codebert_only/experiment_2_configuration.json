@@ -1,0 +1,22 @@
+{
+    "experiment": "Experiment 2 - CodeBERT Only",
+    "split_method": "Project-wise chronological 70/15/15",
+    "train_rows": 41998,
+    "validation_rows": 8998,
+    "test_rows": 9000,
+    "feature_type": "PCA-reduced CodeBERT embedding",
+    "original_embedding_dimension": 768,
+    "pca_dimension": 384,
+    "embedding_storage": "embedding column",
+    "pca_fitted_on": "training split only",
+    "jit_features_used": false,
+    "resampling_used": false,
+    "random_split_used": false,
+    "threshold": 0.5,
+    "random_state": 42,
+    "xgboost_scale_pos_weight": 2.52568838146407,
+    "models": [
+        "Random Forest",
+        "XGBoost"
+    ]
+}

@@ -1,0 +1,32 @@
+{
+  "experiment": "4B2",
+  "description": "Reduced Feature Fusion",
+  "jit_features": [
+    "la",
+    "ld",
+    "nf",
+    "ns",
+    "nd",
+    "ent",
+    "ndev",
+    "age",
+    "nuc",
+    "aexp",
+    "arexp",
+    "asexp"
+  ],
+  "jit_dimension": 12,
+  "full_pca_dimension": 384,
+  "selected_pca_components": 50,
+  "total_fused_features": 62,
+  "fusion_strategy": "early_concatenation",
+  "pca_fitted_on": "train_only",
+  "pca_selection": "first_50_components_of_existing_384d_pca",
+  "join_key": "commit_id",
+  "resampling": false,
+  "random_split": false,
+  "threshold": 0.5,
+  "random_state": 42,
+  "rf_estimators": 300,
+  "xgb_estimators": 300
+}

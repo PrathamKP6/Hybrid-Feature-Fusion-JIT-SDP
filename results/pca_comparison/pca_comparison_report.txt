@@ -1,0 +1,14 @@
+TRAIN-ONLY PCA COMPONENT COMPARISON
+==============================================================================
+Training rows used: 41,998
+Input dimensions: 768
+Validation used: NO
+Test used: NO
+
+ n_components  explained_variance_ratio  explained_variance_percent  reconstruction_mse  fit_seconds  compression_ratio status
+          256                  0.983434                   98.343408        1.135098e-04     4.909808                3.0     ok
+          384                  0.994280                   99.428028        3.919232e-05     7.989571                2.0     ok
+          512                  0.997978                   99.797791        1.385856e-05     9.494639                1.5     ok
+          768                  1.000000                   99.999970        1.773731e-12    17.633037                1.0     ok
+
+Smallest tested dimensionality retaining >=95% variance: 256

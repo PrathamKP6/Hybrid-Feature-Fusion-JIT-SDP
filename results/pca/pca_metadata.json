@@ -1,0 +1,21 @@
+{
+  "method": "PCA",
+  "input_embedding_dimension": 768,
+  "output_embedding_dimension": 384,
+  "fit_source": "train.csv ONLY",
+  "validation_used_for_fit": false,
+  "test_used_for_fit": false,
+  "random_state": 42,
+  "solver": "randomized",
+  "training_rows": 41998,
+  "validation_rows": 8998,
+  "test_rows": 9000,
+  "explained_variance_ratio": 0.9942802786827087,
+  "explained_variance_percent": 99.42802786827087,
+  "pca_model": "results\\pca\\pca_384_model.npz",
+  "outputs": {
+    "train": "results\\pca\\train_pca384.csv",
+    "validation": "results\\pca\\validation_pca384.csv",
+    "test": "results\\pca\\test_pca384.csv"
+  }
+}

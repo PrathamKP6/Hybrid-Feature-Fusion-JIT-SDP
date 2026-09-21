@@ -1,0 +1,24 @@
+{
+  "experiment": "LLM redundancy-reduced feature fusion",
+  "jit_features": 12,
+  "codebert_features": 384,
+  "codebert_storage": "embedding column in *_pca384.csv",
+  "llm_variants": {
+    "A_all51": "37 categorical one-hot + 14 confidence/margin",
+    "B_conf_margin14": "14 confidence/margin only",
+    "C_reduced_no_security": "intent/change/risk/complexity/scope/test categorical one-hot + 14 confidence/margin; security categorical dimension removed"
+  },
+  "split": "existing project-wise chronological 70/15/15",
+  "pca": "existing train-only PCA",
+  "llm_ohe": "fit on train only",
+  "llm_imputation": "median fit on train only",
+  "resampling": false,
+  "random_split": false,
+  "test_used_for_selection": false,
+  "threshold": 0.5,
+  "models": [
+    "RandomForest",
+    "XGBoost",
+    "LightGBM"
+  ]
+}
