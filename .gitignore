@@ -18,6 +18,12 @@ cpp_python_mining_code/cpython/
 cpp_python_mining_code/godot/
 cpp_python_mining_code/krita/
 cpp_python_mining_code/opencv/
+data/
 
 # Generated CSV files
 cpp_python_mining_code/*.csv
+cpp_python_mining_code/data/llm_input_59996.csv
+experiments/
+results/chronological_splits
+results/pca
+cpp_python_mining_code/dataset_inspection_output.txt

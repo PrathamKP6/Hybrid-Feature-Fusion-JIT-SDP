@@ -31,9 +31,10 @@ from pathlib import Path
 pd.set_option('display.max_columns', None)
 
 print("Loading dataset...")
-dataset_path = Path("final_multilanguage.csv")
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+dataset_path = PROJECT_ROOT / "data" / "final_multilanguage_dataset.csv"
 if not dataset_path.exists():
-    dataset_path = Path("final_multilanguage_dataset.csv")
+    dataset_path = PROJECT_ROOT / "data" / "final_multilanguage.csv"
 
 print(f"Reading from: {dataset_path}")
 df = pd.read_csv(dataset_path)

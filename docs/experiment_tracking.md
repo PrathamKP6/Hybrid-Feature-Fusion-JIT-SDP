@@ -117,3 +117,57 @@ Evaluate whether combining traditional JIT metrics with PCA-reduced CodeBERT fea
 
 ### Conclusion
 CodeBERT semantic representations provide legitimate, orthogonal predictive signal that complements process/churn metrics. Early feature fusion achieves superior defect classification under rigorous chronological validation.
+
+---
+
+# Appendix — Java-Only Subset Results from `fixed_dataset_comparison`
+
+The following results are appended from the Java-only experiment outputs in the `fixed_dataset_comparison` branch. Existing experiment-tracking content above is retained unchanged.
+
+## Dataset and Evaluation Strategy
+
+| Item | Value |
+| :--- | :--- |
+| Dataset | Java-only subset of Apache projects |
+| Dataset file | `java_only_latest_36k_pca384.csv` |
+| Source projects | 13 Apache Java projects |
+| Full dataset rows | 36,000 |
+| Author-date range | May 2016 – December 2019 |
+| Experiment subset | 10,000 rows |
+| Split strategy | Chronological 80% train / 20% final test |
+| Train rows | 8,000 |
+| Final test rows | 2,000 |
+| Evaluation metrics | Precision, Recall, F1, ROC-AUC, PR-AUC, MCC |
+
+## Experiment 1 — JIT Features Only
+
+**Dataset:** Java-only 10,000-row experiment subset.
+
+**Strategy:** Chronological 80/20 split using 13 JIT/process features: `la`, `ld`, `nf`, `ns`, `nd`, `ent`, `ndev`, `age`, `nuc`, `aexp`, `arexp`, `asexp`. Random Forest used balanced class weighting; XGBoost used the computed positive-class weight.
+
+| Model | Accuracy | Precision | Recall | F1 | ROC-AUC | PR-AUC | MCC |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Random Forest | 0.9205 | 0.4167 | 0.2414 | 0.3057 | 0.8161 | 0.3032 | 0.2779 |
+| XGBoost | 0.7970 | 0.2144 | 0.6759 | 0.3256 | 0.8268 | 0.3267 | 0.2979 |
+
+## Experiment 2 — CodeBERT Features Only
+
+**Dataset:** Java-only 10,000-row experiment subset.
+
+**Strategy:** Chronological 80/20 split using CodeBERT embeddings reduced to 384 PCA features (`pca_1` through `pca_384`). Random Forest used balanced class weighting; XGBoost used the experiment's standard configuration.
+
+| Model | Accuracy | Precision | Recall | F1 | ROC-AUC | PR-AUC | MCC |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Random Forest | 0.9270 | 0.0000 | 0.0000 | 0.0000 | 0.7158 | 0.1456 | -0.0063 |
+| XGBoost | 0.9250 | 0.4324 | 0.1103 | 0.1758 | 0.7435 | 0.2172 | 0.1906 |
+
+## Experiment 4 — JIT + CodeBERT Early Fusion
+
+**Dataset:** Java-only 10,000-row experiment subset.
+
+**Strategy:** Chronological 80/20 split using the 13 JIT features concatenated with 384 CodeBERT PCA features, for 397 total features.
+
+| Model | Accuracy | Precision | Recall | F1 | ROC-AUC | PR-AUC | MCC |
+| :--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Random Forest | 0.9300 | 0.6190 | 0.0897 | 0.1566 | 0.8254 | 0.3015 | 0.2171 |
+| XGBoost | 0.8690 | 0.2903 | 0.5586 | 0.3821 | 0.8447 | 0.3677 | 0.3382 |
