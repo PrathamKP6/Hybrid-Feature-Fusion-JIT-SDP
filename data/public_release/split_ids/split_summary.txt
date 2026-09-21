@@ -1,0 +1,28 @@
+PUBLICATION DATASET SPLIT SUMMARY
+======================================================================
+
+Split policy:
+Project-wise chronological 70/15/15 split.
+Each project is ordered chronologically and divided into:
+  - oldest 70%  -> training
+  - next 15%    -> validation
+  - newest 15%  -> testing
+
+No random shuffling.
+No random train/test split.
+No resampling.
+
+SPLIT SIZES
+----------------------------------------------------------------------
+Train:      41,998
+Validation: 8,998
+Test:       9,000
+Total:      59,996
+
+OVERLAP CHECK
+----------------------------------------------------------------------
+Train ∩ Validation = 0
+Train ∩ Test       = 0
+Validation ∩ Test  = 0
+
+Coverage: PASS
