@@ -4,38 +4,46 @@ final_dataset.csv.zip
 __pycache__/
 embeddings_and_pca_code/*.csv
 *.log
+
 final_multilanguage_dataset.csv
 final_multilanguage_dataset_with_embeddings_pca384.csv
 frozen_sample_commit_ids.csv
 frozen_sample_dataset.csv
+
 results/experiment_1/models/*
 results/experiment_2/models/*
 results/data/java_only_frozen_sample_dataset.csv
+
 data/final_multilanguage_59996_szz_buggy.csv
 data/final_multilanguage_szz_buggy_384d.csv
 data/llm_experiment_dataset/*
 data/llm_experiment_preprocessed/*
 cpp_python_mining_code/cpython_python_history.pkl
+
 # Large cloned repositories
 cpp_python_mining_code/cpython/
 cpp_python_mining_code/godot/
 cpp_python_mining_code/krita/
 cpp_python_mining_code/opencv/
+
+# Data directory
 data/
 
 # Generated CSV files
 cpp_python_mining_code/*.csv
-results/chronological_splits/train.csv
-results/chronological_splits/test.csv
-results/chronological_splits/validation.csv
+results/chronological_splits/*.csv
+results/pca/*.csv
 
 # Generated model artifacts
 *.joblib
-*.npy
-*.npz
-*.pkl
 
-results/pca/*.csv
+# Generated PCA / numerical artifacts
+*.npz
+*.npy
+
+# Generated status files
 *.status
+
+# Experiment 5 generated datasets
 results/experiment_5_jit_llm/datasets/*.csv
 results/experiment_5_jit_llm/llm_preprocessed/*.csv
