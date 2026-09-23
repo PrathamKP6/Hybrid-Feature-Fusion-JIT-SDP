@@ -49,3 +49,4 @@ results/pca/*.csv
 # Experiment 5 generated datasets
 results/experiment_5_jit_llm/datasets/*.csv
 results/experiment_5_jit_llm/llm_preprocessed/*.csv
+results/chronological_splits_smoke_projectwise/
