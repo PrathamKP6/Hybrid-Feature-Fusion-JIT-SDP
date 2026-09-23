@@ -26,8 +26,10 @@ cpp_python_mining_code/godot/
 cpp_python_mining_code/krita/
 cpp_python_mining_code/opencv/
 
-# Data directory
-data/
+# Data directory: keep only the public release tracked
+data/*
+!data/public_release/
+!data/public_release/**
 
 # Generated CSV files
 cpp_python_mining_code/*.csv
