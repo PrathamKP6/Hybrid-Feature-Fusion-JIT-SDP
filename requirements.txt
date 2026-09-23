@@ -1,0 +1,16 @@
+# Core data processing and numerical analysis
+pandas
+numpy
+
+# Machine learning and model persistence
+scikit-learn
+joblib
+xgboost
+lightgbm
+
+# Research plots and evaluation figures
+matplotlib
+
+# Git repository mining
+PyDriller
+GitPython
