@@ -28,3 +28,14 @@ cpp_python_mining_code/*.csv
 results/chronological_splits/train.csv
 results/chronological_splits/test.csv
 results/chronological_splits/validation.csv
+
+# Generated model artifacts
+*.joblib
+*.npy
+*.npz
+*.pkl
+
+results/pca/*.csv
+*.status
+results/experiment_5_jit_llm/datasets/*.csv
+results/experiment_5_jit_llm/llm_preprocessed/*.csv
