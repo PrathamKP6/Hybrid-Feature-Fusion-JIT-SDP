@@ -244,37 +244,47 @@ def show_commit_detail(row):
 
 
 def recent_project_mix(frame: pd.DataFrame) -> pd.DataFrame:
-    """Order newest years first while interleaving projects within each year."""
+    """Sort newest years first and interleave projects efficiently.
+
+    Uses vectorized group ranks rather than repeatedly slicing DataFrames one
+    row at a time, which was a major source of Streamlit rerun latency.
+    """
     if frame.empty:
         return frame.copy()
+
     ordered = frame.copy()
     if "year" not in ordered.columns:
         return ordered
+
     ordered["_year_sort"] = pd.to_numeric(ordered["year"], errors="coerce")
-    ordered["_project_sort"] = (
-        ordered["project"].fillna("Unknown project").astype(str)
-        if "project" in ordered.columns else "Unknown project"
+    if "project" in ordered.columns:
+        ordered["_project_sort"] = ordered["project"].fillna("Unknown project").astype(str)
+    else:
+        ordered["_project_sort"] = "Unknown project"
+
+    # Within each year, rank each project's commits. Sorting by this rank puts
+    # the first commit from every project before the second commit from any
+    # project, while preserving newest-year-first ordering.
+    tie_breakers = ["commit_id"] if "commit_id" in ordered.columns else []
+    ordered = ordered.sort_values(
+        ["_year_sort", "_project_sort"] + tie_breakers,
+        ascending=[False, True] + [True] * len(tie_breakers),
+        na_position="last",
+        kind="stable",
     )
-    ordered = ordered.sort_values("_year_sort", ascending=False, na_position="last", kind="stable")
-    pieces = []
-    for year_value, year_group in ordered.groupby("_year_sort", dropna=False, sort=False):
-        # Within a year, take one commit per project at a time so the list does
-        # not appear to contain only one repository at the top.
-        project_groups = {
-            project: group.sort_values("commit_id", kind="stable")
-            for project, group in year_group.groupby("_project_sort", sort=True, dropna=False)
-        }
-        while any(not group.empty for group in project_groups.values()):
-            for project in list(project_groups):
-                group = project_groups[project]
-                if not group.empty:
-                    pieces.append(group.iloc[[0]])
-                    project_groups[project] = group.iloc[1:]
-    if not pieces:
-        return ordered.drop(columns=["_year_sort", "_project_sort"], errors="ignore")
-    result = pd.concat(pieces, ignore_index=False)
-    result = result.sort_values("_year_sort", ascending=False, kind="stable")
-    return result.drop(columns=["_year_sort", "_project_sort"], errors="ignore").reset_index(drop=True)
+    ordered["_project_year_rank"] = ordered.groupby(
+        ["_year_sort", "_project_sort"], dropna=False, sort=False
+    ).cumcount()
+    ordered = ordered.sort_values(
+        ["_year_sort", "_project_year_rank", "_project_sort"],
+        ascending=[False, True, True],
+        na_position="last",
+        kind="stable",
+    )
+    return ordered.drop(
+        columns=["_year_sort", "_project_sort", "_project_year_rank"],
+        errors="ignore",
+    ).reset_index(drop=True)
 
 
 def correct_example_sample(frame: pd.DataFrame, limit: int = 10) -> pd.DataFrame:
@@ -491,7 +501,12 @@ elif page == "Commit explorer":
     if filtered.empty:
         st.warning("No commits match those filters. Try a shorter hash or choose a different project.")
     else:
-        display = filtered.reset_index(drop=True).copy()
+        # Sending thousands of rows to the browser on every widget rerun makes
+        # the explorer sluggish. Keep filtering/counts over the full split, but
+        # render a bounded recent page; users can narrow with hash/project/risk.
+        table_limit = 300
+        table_records = filtered.head(table_limit).reset_index(drop=True).copy()
+        display = table_records.copy()
         display["blend_probability"] = display["blend_probability"].map(
             lambda value: f"{value:.2%}" if pd.notna(value) else "N/A"
         )
@@ -512,7 +527,10 @@ elif page == "Commit explorer":
         # Make a selected table row drive the commit analysis below.
         table_key = "explorer_table_" + str(abs(hash((search.strip(), risk_filter, tuple(selected_projects), split))))
         st.markdown("#### Select a row to inspect that commit")
-        st.caption("Click any row in the table. The commit analysis below updates to the selected row.")
+        if len(filtered) > table_limit:
+            st.caption(f"Showing the {table_limit} most recent matching commits out of {len(filtered):,}. Use the filters above to narrow the list.")
+        else:
+            st.caption("Click any row in the table. The commit analysis below updates to the selected row.")
         event = st.dataframe(
             table_view,
             use_container_width=True,
@@ -528,8 +546,8 @@ elif page == "Commit explorer":
         except (AttributeError, TypeError):
             pass
         selected_position = selected_rows[0] if selected_rows else 0
-        selected_position = min(max(int(selected_position), 0), len(filtered) - 1)
-        selected_row = filtered.iloc[selected_position]
+        selected_position = min(max(int(selected_position), 0), len(table_records) - 1)
+        selected_row = table_records.iloc[selected_position]
 
         st.divider()
         st.markdown("#### 🔎 Selected commit analysis")
