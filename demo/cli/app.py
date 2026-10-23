@@ -25,7 +25,7 @@ def load_commit_metadata(split):
     columns = [
         column
         for column in [
-            "commit_id", "project", "language", "year",
+            "commit_id", "project", "year",
             "author_date", "message", "buggy",
         ]
         if column in frame.columns
@@ -71,7 +71,6 @@ def show_prediction(row, split):
         Panel(
             f"[bold]Commit:[/bold] {row['commit_id']}\n"
             f"[bold]Project:[/bold] {row.get('project', 'Unknown')}\n"
-            f"[bold]Language:[/bold] {row.get('language', 'Unknown')}\n"
             f"[bold]Year:[/bold] {row.get('year', 'Unknown')}\n"
             f"[bold]Split:[/bold] {split}",
             title="Experiment 7F — Commit Analysis",
